@@ -4,7 +4,7 @@ Project for ZJU 2021 Information Retrieval and Web Search
 
 ## Usage
 
-1. Environment setup:
+1. Environment setup (Add the corpus `Reuters` to path `searchEngine/`):
 
 ```shell
 pip install -r requirements.txt
