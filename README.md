@@ -2,6 +2,9 @@
 
 Project for ZJU 2021 Information Retrieval and Web Search
 
+README稍后更新，不会用可以直接问我
+
+
 ## Usage
 
 1. Environment setup (Add the corpus `Reuters` to path `searchEngine/`):

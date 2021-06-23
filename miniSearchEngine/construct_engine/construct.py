@@ -74,12 +74,6 @@ def construct_term_dict(doc_dict):
 
 
 def construct_vector_model(term_dict, doc_dict):
-    """
-
-    :param term_dict:
-    :return:
-    """
-
     tf_matrix = dict()
     df_matrix = dict()
     vector_model = dict()
@@ -135,3 +129,11 @@ def construct_engine(dataset_path="Reuters"):
     vector_model = construct_vector_model(term_dict, doc_dict)
 
     return term_dict, vector_model
+
+
+def main():
+    construct_engine()
+
+
+if __name__ == '__main__':
+    construct_engine()
