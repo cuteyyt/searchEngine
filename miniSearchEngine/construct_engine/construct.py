@@ -1,49 +1,47 @@
 import os
-import re
+import time
 import math
+import json
+import argparse
 import pandas as pd
 
+from .preprocess import preprocess_for_term_dict
 
-def read_files(dataset_path="Reuters"):
+
+def read_files(data_path="Reuters"):
     """
-    Read files from Reuters
-    :param dataset_path: Reuters corpus path
+
+    :param data_path:
     :return:
     """
+    print("\tI'm reading raw data from disk...")
     doc_dict = dict()
-    for i, filename in enumerate(os.listdir(dataset_path)):
-        # Choose first 100 files as an example
+    if len(os.listdir(data_path)) == 0:
+        raise ValueError("No file in directory {}".format(data_path))
+    for i, filename in enumerate(os.listdir(data_path)):
+        # FIXME: Choose first 100 files as an example
         if i >= 100:
             break
-        with open(os.path.join(dataset_path, filename), 'r') as file:
+        with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
             doc_dict[i] = dict()
             doc_dict[i]['doc_id'] = i + 1
             doc_dict[i]['filename'] = filename
             doc_dict[i]['content'] = content
-            file.close()
-    print("{:} files has been collected!".format(len(doc_dict)))
+        file.close()
+    print("\tDoc dict with {:} files has been collected!".format(len(doc_dict)))
     return doc_dict
 
 
-def construct_term_dict(doc_dict):
-    """
-    Construct a term dict.
-    :param doc_dict:
-    :return:
-    """
+def construct_term_dict(args, doc_dict):
+    print("\tI'm constructing term dict...")
     term_dict = dict()
 
     for key in doc_dict.keys():
         doc_id = doc_dict[key]['doc_id']
         content = doc_dict[key]['content']
-        term_list = content.split(" ")
+        term_list = preprocess_for_term_dict(args, content)
         for i, term in enumerate(term_list):
-            # FIXME: Some pre processing works
-            # FIXME: Word Segmentation; Stop words; Normalization; Lemmatization; Stemming
-            term = re.sub(r'[\":\s ,]*', '', term)
-            if term == "":
-                continue
             if term not in term_dict.keys():
                 term_dict[term] = dict()
                 term_dict[term]['doc_feq'] = 1
@@ -57,8 +55,6 @@ def construct_term_dict(doc_dict):
                     term_dict[term]['posting_list'][doc_id].append(i)
 
     # Write term_dict to "engine/term_dict.csv"
-
-    # Extract term, doc feq, posting list from term dict
     term_col = list()
     doc_feq_col = list()
     posting_list_col = list()
@@ -70,10 +66,11 @@ def construct_term_dict(doc_dict):
     data_frame = pd.DataFrame({'term': term_col, 'doc_feq': doc_feq_col, 'posting_list': posting_list_col})
     data_frame.to_csv("engine/term_dict.csv", index=False, sep=',')
 
+    print("Dict with {:d} terms has been created!".format(len(term_dict)))
     return term_dict
 
 
-def construct_vector_model(term_dict, doc_dict):
+def construct_vector_model(args, term_dict, doc_dict):
     tf_matrix = dict()
     df_matrix = dict()
     vector_model = dict()
@@ -123,17 +120,46 @@ def construct_vector_model(term_dict, doc_dict):
     return vector_model
 
 
-def construct_engine(dataset_path="Reuters"):
-    doc_dict = read_files(dataset_path)
-    term_dict = construct_term_dict(doc_dict)
-    vector_model = construct_vector_model(term_dict, doc_dict)
+def construct_engine(args):
+    data_path = args.data_path
+
+    doc_dict = read_files(data_path)
+    term_dict = construct_term_dict(args, doc_dict)
+    vector_model = construct_vector_model(args, term_dict, doc_dict)
 
     return term_dict, vector_model
 
 
 def main():
-    construct_engine()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_path", type=str, default="Reuters/",
+                        help="Path to the directory which contains raw data files.")
+    parser.add_argument("--engine_path", type=str, default="engine/",
+                        help="Path to store the posting list, vector model and other necessary files.")
 
+    parser.add_argument("--seg", "--segmentation", type=int, default=0,
+                        help="0: Split by SPACES ONLY."
+                             "1: Split by SPACES with PUNCTUATION removed."
+                             "default is 0.")
+    parser.add_argument("--stop", "--stopwords", type=bool, default=False,
+                        help="Whether to remove stop words, default is FALSE.")
+    parser.add_argument("--norm", "--normalization", type=bool, default=False,
+                        help="Whether to use token normalization, default is FALSE.")
+    parser.add_argument("--lem", "--lemmatization", type=bool, default=False,
+                        help="Whether to use token Lemmatization, default is FALSE.")
+    parser.add_argument("--stem", "--stemming", type=bool, default=False,
+                        help="Whether to use token Stemming, default is FALSE.")
 
-if __name__ == '__main__':
-    construct_engine()
+    print("I have received the task: construct search engine.")
+    print("I'm using the following parameters:")
+    args = parser.parse_args()
+    print(json.dumps(args.__dict__, indent=2))
+
+    print("I'm doing the task: construct search engine...")
+    start = time.time()
+    construct_engine(args)
+    end = time.time()
+    print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
+
+    if __name__ == '__main__':
+        main()

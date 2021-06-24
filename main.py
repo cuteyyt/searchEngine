@@ -1,4 +1,4 @@
-from miniSearchEngine.construct_engine.construct import construct_engine
+from miniSearchEngine.construct_engine.construct import main
 
 if __name__ == '__main__':
-    construct_engine()
+    main()

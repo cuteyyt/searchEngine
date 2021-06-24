@@ -10,10 +10,15 @@ setup(name='miniSearchEngine',
       license='Apache License Version 2.0, January 2004',
       install_requires=[
           "pandas",
+          "nltk",
+          "jieba"
       ],
       entry_points={
           'console_scripts': [
               'construct_engine = miniSearchEngine.construct_engine.construct:main',
+              'add_stopwords = miniSearchEngine.help.edit_stop_words:add',
+              'remove_stopwords = miniSearchEngine.help.edit_stop_words:remove',
+              'reset_stopwords = miniSearchEngine.help.edit_stop_words:reset'
           ],
       },
       keywords=['search engine']
