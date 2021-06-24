@@ -9,9 +9,10 @@ setup(name='miniSearchEngine',
       author_email='youtanyin@zju.edu.cn',
       license='Apache License Version 2.0, January 2004',
       install_requires=[
+          "numpy",
           "pandas",
           "nltk",
-          "jieba"
+          "jieba",
       ],
       entry_points={
           'console_scripts': [

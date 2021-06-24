@@ -180,8 +180,36 @@ def construct_vector_model(args, term_dict, doc_dict):
     return vector_model
 
 
-def compress_index():
-    pass
+def compress_index(term_dict, k):
+    # 单一字符串
+    compressed_term_dict = dict()
+    term_str = ""
+    for i, term in enumerate(term_dict.keys()):
+        term_str += term
+        compressed_term_dict[i] = term_dict[term]
+
+    # 按块存储
+    # compressed_term_dict = dict()
+    # term_str = ""
+    # for i, term in enumerate(term_dict.keys()):
+    #     term_str += str(len(term)) + term
+    #     if i % k == 0:
+    #         compressed_term_dict[i] = [term_dict[term]]
+    #     else:
+    #         compressed_term_dict[i].append(term_dict[term])
+
+    # 使用间隔
+    for term in compressed_term_dict.keys():
+        posting_list = compressed_term_dict[term]['posting_list']
+        for key in posting_list.key():
+            internal_key = posting_list[key_next] - posting_list[key]
+    # 间隔 VB 编码
+    compressed_key = vb_coding()
+    compressed_key = vb_decoding()
+
+    # 间隔 γ 编码
+
+    return compressed_term_dict, term_str
 
 
 def construct_engine(args):
@@ -189,10 +217,10 @@ def construct_engine(args):
 
     doc_dict = read_files(data_path)
     term_dict = construct_term_dict(args, doc_dict)
-    bi_word_dict = construct_bi_term_dict(args, doc_dict)
+    # bi_word_dict = construct_bi_term_dict(args, doc_dict)
     vector_model = construct_vector_model(args, term_dict, doc_dict)
 
-    return term_dict, vector_model, bi_word_dict
+    return term_dict, vector_model
 
 
 def main():
@@ -202,6 +230,7 @@ def main():
     parser.add_argument("--engine_path", type=str, default="engine/",
                         help="Path to store the posting list, vector model and other necessary files.")
 
+    # Preprocess
     parser.add_argument("--seg", "--segmentation", type=int, default=1,
                         help="0: Split by SPACES ONLY."
                              "1: Split by SPACES with PUNCTUATION removed."
@@ -215,14 +244,25 @@ def main():
     parser.add_argument("--stem", "--stemming", type=bool, default=False,
                         help="Whether to use token Stemming, default is FALSE.")
 
+    # index compression
+    parser.add_argument("--compress_stem", type=str, default="single",
+                        help="none:"
+                             "single:"
+                             "block:", )
+    parser.add_argument("--compress_doc_id", type=str, default="vb",
+                        help="none:"
+                             "vb:"
+                             "gamma:")
+    parser.add_argument("--compress_pos_id", type=str, default="none",
+                        help="none:"
+                             "vb:"
+                             "gamma:"
+                        )
+
     print("I have received the task: construct search engine.")
     print("I'm using the following parameters:")
     args = parser.parse_args()
     print(json.dumps(args.__dict__, indent=2))
-
-    # print("I'm checking whether the exist engine...")
-    #
-    # print("Missing {} in disk already.")
 
     print("I'm doing the task: construct search engine...")
     start = time.time()
