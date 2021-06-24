@@ -78,6 +78,53 @@ def construct_term_dict(args, doc_dict):
     return term_dict
 
 
+def construct_bi_term_dict(args, doc_dict):
+    print("\tI'm constructing the bi term dict...")
+    start = time.time()
+    bi_term_dict = dict()
+
+    for key in doc_dict.keys():
+        doc_id = doc_dict[key]['doc_id']
+        content = doc_dict[key]['text']
+        term_list = content.split(" ")
+        for i in range(len(term_list) - 1):
+            term = term_list[i]
+            term_next = term_list[i + 1]
+            term = preprocess_for_term(args, term)
+            term_next = preprocess_for_term(args, term_next)
+            bi_term = term + " " + term_next
+            if bi_term != "":
+                if bi_term not in bi_term_dict.keys():
+                    bi_term_dict[bi_term] = dict()
+                    bi_term_dict[bi_term]['doc_feq'] = 1
+                    bi_term_dict[bi_term]['posting_list'] = dict()
+                    bi_term_dict[bi_term]['posting_list'][doc_id] = [i]
+                else:
+                    if doc_id not in bi_term_dict[bi_term]['posting_list'].keys():
+                        bi_term_dict[bi_term]['doc_feq'] += 1
+                        bi_term_dict[bi_term]['posting_list'][doc_id] = [i]
+                    else:
+                        bi_term_dict[bi_term]['posting_list'][doc_id].append(i)
+
+    # Write bi_term_dict to "engine/bi_term_dict.csv"
+    bi_term_dict = dict(sorted(bi_term_dict.items(), key=lambda x: x[0]))
+    term_col = list(bi_term_dict.keys())
+    doc_feq_col = list()
+    posting_list_col = list()
+    for bi_term in bi_term_dict.keys():
+        doc_feq_col.append(bi_term_dict[bi_term]['doc_feq'])
+        posting_list = dict(sorted(bi_term_dict[bi_term]['posting_list'].items(), key=lambda x: x[0]))
+        bi_term_dict[bi_term]['posting_list'] = posting_list
+        posting_list_col.append(posting_list)
+
+    data_frame = pd.DataFrame({'bi_term': term_col, 'doc_feq': doc_feq_col, 'posting_list': posting_list_col})
+    data_frame.to_csv("engine/bi_term_dict.csv", index=False, sep=',')
+
+    end = time.time()
+    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(bi_term_dict), end - start))
+    return bi_term_dict
+
+
 def construct_vector_model(args, term_dict, doc_dict):
     print("\tI'm constructing the vector model...")
     start = time.time()
@@ -142,9 +189,10 @@ def construct_engine(args):
 
     doc_dict = read_files(data_path)
     term_dict = construct_term_dict(args, doc_dict)
+    bi_word_dict = construct_bi_term_dict(args, doc_dict)
     vector_model = construct_vector_model(args, term_dict, doc_dict)
 
-    return term_dict, vector_model
+    return term_dict, vector_model, bi_word_dict
 
 
 def main():
