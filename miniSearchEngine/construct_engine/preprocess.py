@@ -39,25 +39,51 @@ def stemming(stemmer, term):
     return stemmer.stem(term)
 
 
-def preprocess_for_term_dict(args, content):
-    raw_term_list = content.split(" ")
+def preprocess_for_term(args, term):
+    if args.seg == 0:
+        r = r"[\n,]+"
+    elif args.seg == 1:
+        r = r"[^a-zA-Z0-9.]+"
+    else:
+        raise NameError("Undefined segmentation mode {:}".format(args.seg))
+
+    # For convenience of coding, we initialize these part anyway
+    stopwords = read_stopwords()
+    wnl = nltk.WordNetLemmatizer()
+    porter = nltk.PorterStemmer()
+
+    term = re.sub(r, r"", term)
+    if args.stop:
+        if is_stopword(term, stopwords):
+            return ""
+    if args.norm:
+        term = normalization(term)
+        # print(term)
+    if args.lem:
+        term = lemmatization(wnl, term)
+        # print(term)
+    if args.stem:
+        term = stemming(porter, term)
+        # print(term)
+
+    # print(term_list)
+    return term
+
+
+def preprocess_for_term_list(args, text):
+    raw_term_list = text.split(" ")
     if args.seg == 0:
         r = r"[\n,]+"
     elif args.seg == 1:
         r = r"[^a-zA-Z0-9.]+"
     elif args.mode == 2:
         r = r""
-        raw_term_list = nltk.word_tokenize(content)
+        raw_term_list = nltk.word_tokenize(text)
     elif args.mode == 3:
         r = r""
-        raw_term_list = list(jieba.cut_for_search(content))
+        raw_term_list = list(jieba.cut_for_search(text))
     else:
         raise NameError("Undefined segmentation mode {:}".format(args.seg))
-
-    args.stop = 1
-    args.norm = 1
-    args.lem = 1
-    args.stem = 1
 
     # For convenience of coding, we initialize these part anyway
     stopwords = read_stopwords()

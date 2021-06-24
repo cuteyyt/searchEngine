@@ -5,7 +5,7 @@ import json
 import argparse
 import pandas as pd
 
-from .preprocess import preprocess_for_term_dict
+from .preprocess import preprocess_for_term
 
 
 def read_files(data_path="Reuters"):
@@ -15,6 +15,7 @@ def read_files(data_path="Reuters"):
     :return:
     """
     print("\tI'm reading raw data from disk...")
+    start = time.time()
     doc_dict = dict()
     if len(os.listdir(data_path)) == 0:
         raise ValueError("No file in directory {}".format(data_path))
@@ -27,50 +28,60 @@ def read_files(data_path="Reuters"):
             doc_dict[i] = dict()
             doc_dict[i]['doc_id'] = i + 1
             doc_dict[i]['filename'] = filename
-            doc_dict[i]['content'] = content
+            doc_dict[i]['text'] = content
         file.close()
-    print("\tDoc dict with {:} files has been collected!".format(len(doc_dict)))
+    end = time.time()
+    print("\tDoc dict with {:} files has been collected in {:.4f} seconds!".format(len(doc_dict), end - start))
     return doc_dict
 
 
 def construct_term_dict(args, doc_dict):
-    print("\tI'm constructing term dict...")
+    print("\tI'm constructing the term dict...")
+    start = time.time()
     term_dict = dict()
 
     for key in doc_dict.keys():
         doc_id = doc_dict[key]['doc_id']
-        content = doc_dict[key]['content']
-        term_list = preprocess_for_term_dict(args, content)
+        content = doc_dict[key]['text']
+        term_list = content.split(" ")
         for i, term in enumerate(term_list):
-            if term not in term_dict.keys():
-                term_dict[term] = dict()
-                term_dict[term]['doc_feq'] = 1
-                term_dict[term]['posting_list'] = dict()
-                term_dict[term]['posting_list'][doc_id] = [i]
-            else:
-                if doc_id not in term_dict[term]['posting_list'].keys():
-                    term_dict[term]['doc_feq'] += 1
+            term = preprocess_for_term(args, term)
+            if term != "":
+                if term not in term_dict.keys():
+                    term_dict[term] = dict()
+                    term_dict[term]['doc_feq'] = 1
+                    term_dict[term]['posting_list'] = dict()
                     term_dict[term]['posting_list'][doc_id] = [i]
                 else:
-                    term_dict[term]['posting_list'][doc_id].append(i)
+                    if doc_id not in term_dict[term]['posting_list'].keys():
+                        term_dict[term]['doc_feq'] += 1
+                        term_dict[term]['posting_list'][doc_id] = [i]
+                    else:
+                        term_dict[term]['posting_list'][doc_id].append(i)
 
     # Write term_dict to "engine/term_dict.csv"
-    term_col = list()
+    term_dict = dict(sorted(term_dict.items(), key=lambda x: x[0]))
+    term_col = list(term_dict.keys())
     doc_feq_col = list()
     posting_list_col = list()
     for term in term_dict.keys():
-        term_col.append(term)
         doc_feq_col.append(term_dict[term]['doc_feq'])
-        posting_list_col.append(term_dict[term]['posting_list'])
+        posting_list = dict(sorted(term_dict[term]['posting_list'].items(), key=lambda x: x[0]))
+        term_dict[term]['posting_list'] = posting_list
+        posting_list_col.append(posting_list)
 
     data_frame = pd.DataFrame({'term': term_col, 'doc_feq': doc_feq_col, 'posting_list': posting_list_col})
     data_frame.to_csv("engine/term_dict.csv", index=False, sep=',')
 
-    print("Dict with {:d} terms has been created!".format(len(term_dict)))
+    end = time.time()
+    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(term_dict), end - start))
     return term_dict
 
 
 def construct_vector_model(args, term_dict, doc_dict):
+    print("\tI'm constructing the vector model...")
+    start = time.time()
+
     tf_matrix = dict()
     df_matrix = dict()
     vector_model = dict()
@@ -117,7 +128,13 @@ def construct_vector_model(args, term_dict, doc_dict):
     df.to_csv("engine/df.csv", index=False, sep=',')
     vm.to_csv("engine/vector_model.csv", index=False, sep=',')
 
+    end = time.time()
+    print("\tVector model has been created in {:.4f} seconds!".format(end - start))
     return vector_model
+
+
+def compress_index():
+    pass
 
 
 def construct_engine(args):
@@ -137,10 +154,10 @@ def main():
     parser.add_argument("--engine_path", type=str, default="engine/",
                         help="Path to store the posting list, vector model and other necessary files.")
 
-    parser.add_argument("--seg", "--segmentation", type=int, default=0,
+    parser.add_argument("--seg", "--segmentation", type=int, default=1,
                         help="0: Split by SPACES ONLY."
                              "1: Split by SPACES with PUNCTUATION removed."
-                             "default is 0.")
+                             "default is 1.")
     parser.add_argument("--stop", "--stopwords", type=bool, default=False,
                         help="Whether to remove stop words, default is FALSE.")
     parser.add_argument("--norm", "--normalization", type=bool, default=False,
@@ -154,6 +171,10 @@ def main():
     print("I'm using the following parameters:")
     args = parser.parse_args()
     print(json.dumps(args.__dict__, indent=2))
+
+    # print("I'm checking whether the exist engine...")
+    #
+    # print("Missing {} in disk already.")
 
     print("I'm doing the task: construct search engine...")
     start = time.time()
