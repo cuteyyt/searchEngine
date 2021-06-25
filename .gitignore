@@ -1,5 +1,6 @@
 .idea
 .git
+/pychche/
 /Reuters/
 /miniSearchEngine.egg-info/
 /engine/

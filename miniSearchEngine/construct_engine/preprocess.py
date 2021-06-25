@@ -60,6 +60,9 @@ def preprocess_for_term(args, term):
         pass
     else:
         term = re.sub(r, r"", term)
+        an = re.search('^[.]+$', term)
+        if an:
+            term = ""
 
     # FIXME: Complete mode 2
     if args.stop == 1:

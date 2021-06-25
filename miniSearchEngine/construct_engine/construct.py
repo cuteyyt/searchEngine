@@ -10,7 +10,7 @@ from copy import deepcopy
 from nltk import pos_tag
 
 from .utils import insert_term2dict, write_term_dict2disk
-from .preprocess import preprocess_for_docs, preprocess_for_term
+from .preprocess import preprocess_for_term
 from .postprocess import compress_index
 
 
@@ -25,7 +25,9 @@ def read_files(data_path="Reuters"):
     doc_dict = dict()
     if len(os.listdir(data_path)) == 0:
         raise ValueError("No file in directory {}".format(data_path))
-    for i, filename in enumerate(os.listdir(data_path)):
+    filenames = os.listdir(data_path)
+    filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+    for i, filename in enumerate(filenames):
         # FIXME: Choose first 100 files for debug.
         if i >= 100:
             break
@@ -40,104 +42,123 @@ def read_files(data_path="Reuters"):
     return doc_dict
 
 
-def construct_term_dict(args, raw_doc_dict):
+def construct_term_dict_with_positional_index(args, raw_doc_dict):
     """
 
     :param args:
     :param raw_doc_dict:
     :return:
     """
-    print("\tI'm creating the term dict...")
+    print("\tI'm creating the term dict with positional index...")
     start = time.time()
-    term_dict = dict()
+    term_dict_with_positional_index = dict()
 
     for doc_id in raw_doc_dict.keys():
         content = raw_doc_dict[doc_id]['text']
         raw_term_list = content.split(" ")
         for i, term in enumerate(raw_term_list):
             term = preprocess_for_term(args, term)
-            insert_term2dict(term, term_dict, doc_id)
+            insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
 
-    term_dict = write_term_dict2disk(term_dict, os.path.join(args.engine_path, "term_dict.csv"))
-
-    end = time.time()
-    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(term_dict), end - start))
-    return term_dict
-
-
-def construct_bi_term_dict(args, raw_doc_dict):
-    print("\tI'm creating the bi term dict...")
-    start = time.time()
-    biword_dict = dict()
-
-    for doc_id in raw_doc_dict.keys():
-        content = raw_doc_dict[doc_id]['text']
-        raw_term_index = content.split(" ")
-        for i in range(len(raw_term_index) - 1):
-            term = raw_term_index[i]
-            term_next = raw_term_index[i + 1]
-            term = preprocess_for_term(args, term)
-            term_next = preprocess_for_term(args, term_next)
-            bi_term = term + " " + term_next
-            insert_term2dict(bi_term, biword_dict, doc_id)
-
-    biword_dict = write_term_dict2disk(biword_dict, os.path.join(args.engine_path, "biword_dict.csv"))
+    term_dict_with_positional_index = write_term_dict2disk(term_dict_with_positional_index,
+                                                           os.path.join(args.engine_path,
+                                                                        "term_dict_with_positional_index.csv"))
 
     end = time.time()
-    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(biword_dict), end - start))
-    return biword_dict
-
-
-def construct_extended_biword_dict(args, raw_doc_dict):
-    print("\tI'm creating the extended biword dict...")
-    start = time.time()
-    extended_biword_dict = dict()
-
-    for doc_id in raw_doc_dict.keys():
-        content = raw_doc_dict[doc_id]['text']
-        raw_term_list = content.split(" ")
-        pointer = 0
-        while pointer < len(raw_term_list):
-            while True:
-                extended_biword = ""
-                term = preprocess_for_term(args, raw_term_list[pointer])
-                term_tag = pos_tag(term)
-                if term_tag == 'n':
-                    pass
-                insert_term2dict(extended_biword, extended_biword_dict, doc_id)
-
-    extended_biword_dict = write_term_dict2disk(extended_biword_dict,
-                                                os.path.join(args.engine_path, "extended_biword_dict.csv"))
-
-    end = time.time()
-    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(extended_biword_dict), end - start))
-    return extended_biword_dict
-
-
-def construct_positional_index(args, term_dict, raw_doc_dict, filename):
-    print("\tI'm creating the {} with positional index...".format(filename))
-    start = time.time()
-
-    term_dict_with_positional_index = deepcopy(term_dict)
-    for doc_id in raw_doc_dict.keys():
-        content = raw_doc_dict[doc_id]['text']
-        raw_term_list = content.split(" ")
-        for i, term in enumerate(raw_term_list):
-            term = preprocess_for_term(args, term)
-            if term in term_dict.keys():
-                term_dict_with_positional_index[term]['posting_list'][doc_id].append(i)
-
-    end = time.time()
-    print("\tDict with {:d} terms has been create in {:.4f} seconds".format(len(term_dict_with_positional_index),
-                                                                            end - start))
-
-    write_term_dict2disk(term_dict_with_positional_index,
-                         os.path.join(args.engine_path, filename.replace(' ', '_') + '_with_positional_index.csv'))
+    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(term_dict_with_positional_index),
+                                                                              end - start))
     return term_dict_with_positional_index
 
 
-def construct_vector_model(args, doc_dict, term_dict):
-    print("\tI'm creating the vector model...")
+def construct_biword_dict_with_positional_index(args, raw_doc_dict):
+    print("\tI'm creating the biword dict with positional index...")
+    start = time.time()
+    biword_dict_with_positional_index = dict()
+
+    for doc_id in raw_doc_dict.keys():
+        content = raw_doc_dict[doc_id]['text']
+        raw_term_list = content.split(" ")
+        for i in range(len(raw_term_list) - 1):
+            term = raw_term_list[i]
+            term_next = raw_term_list[i + 1]
+            term = preprocess_for_term(args, term)
+            term_next = preprocess_for_term(args, term_next)
+            if term == "" or term_next == "":
+                continue
+            bi_term = term + " " + term_next
+            insert_term2dict(bi_term, biword_dict_with_positional_index, doc_id, i)
+
+    biword_dict_with_positional_index = write_term_dict2disk(biword_dict_with_positional_index,
+                                                             os.path.join(args.engine_path,
+                                                                          "biword_dict_with_positional_index.csv"))
+
+    end = time.time()
+    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(biword_dict_with_positional_index),
+                                                                              end - start))
+    return biword_dict_with_positional_index
+
+
+def construct_extended_biword_dict_with_positional_index(args, raw_doc_dict):
+    print("\tI'm creating the extended biword dict with positional index...")
+    start = time.time()
+    extended_biword_dict_with_positional_index = dict()
+
+    noun = ['NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$']
+    x = ['CC', 'DT', 'IN', 'PDT', 'POS']
+    for doc_id in raw_doc_dict.keys():
+        content = raw_doc_dict[doc_id]['text']
+        raw_term_list = content.split(" ")
+
+        pointer = 0
+        while pointer < len(raw_term_list):
+            extended_biword = ""
+            flag = 'init'
+            while pointer < len(raw_term_list):
+                term = preprocess_for_term(args, raw_term_list[pointer])
+                word, tag = pos_tag([term])[0]
+                if tag in noun and flag == 'init':
+                    flag = 'traverse'
+                    extended_biword += word
+                if tag in x and flag == 'traverse':
+                    extended_biword += word
+                if tag not in x and tag not in noun and flag == 'traverse':
+                    break
+                if tag in noun and flag == 'traverse':
+                    extended_biword += word
+                    insert_term2dict(extended_biword, extended_biword_dict_with_positional_index, doc_id, pointer)
+                    break
+                pointer += 1
+            pointer += 1
+    extended_biword_dict_with_positional_index = write_term_dict2disk(
+        extended_biword_dict_with_positional_index,
+        os.path.join(
+            args.engine_path,
+            "extended_biword_dict_with_positional_index.csv"))
+
+    end = time.time()
+    print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(
+        len(extended_biword_dict_with_positional_index), end - start))
+    return extended_biword_dict_with_positional_index
+
+
+def construct_term_dict(args, term_dict, filename):
+    print("\tI'm reducing positional index for {}...".format(filename))
+    start = time.time()
+
+    term_dict = deepcopy(term_dict)
+    for term in term_dict.keys():
+        for doc_id in term_dict[term]['posting_list'].keys():
+            term_dict[term]['posting_list'][doc_id] = list()
+    end = time.time()
+    print("\tDict with {:d} terms has been create in {:.4f} seconds".format(len(term_dict), end - start))
+
+    write_term_dict2disk(term_dict, os.path.join(args.engine_path, filename.replace(' ', '_') + '.csv'))
+    return term_dict
+
+
+def construct_vector_model(args, term_dict, doc_dict, filename):
+    print("\tI'm creating the vector model for {}...".format(filename))
+    filename = filename.replace(' ', '_')
     start = time.time()
 
     tf_matrix = dict()
@@ -180,28 +201,34 @@ def construct_vector_model(args, doc_dict, term_dict):
     df = pd.DataFrame({'term': df_matrix_term_col, 'df': df_matrix_df_col})
     vm = pd.DataFrame(vm_dict)
 
-    tf.to_csv(os.path.join(args.engine_path, "tf.csv"), index=False, sep=',')
-    df.to_csv(os.path.join(args.engine_path, "df.csv"), index=False, sep=',')
-    vm.to_csv(os.path.join(args.engine_path, "vector_model.csv"), index=False, sep=',')
+    tf.to_csv(os.path.join(args.engine_path, filename + "_tf.csv"), index=False, sep=',')
+    df.to_csv(os.path.join(args.engine_path, filename + "_df.csv"), index=False, sep=',')
+    vm.to_csv(os.path.join(args.engine_path, filename + "_vector_model.csv"), index=False, sep=',')
 
-    row = len(vector_model)
-    col = len(vm_dict[1])
+    row = len(vm_dict[1])
+    col = len(vm.columns) - 1
 
     end = time.time()
-    print("\tVector model {:d}*{:d}(docs*terms) has been created in {:.4f} seconds!".format(row, col, end - start))
+    print("\tVector model {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
     return vector_model
 
 
 def construct_dict_with_vector_model(args, raw_doc_dict, name):
     if args.biword:
-        term_dict = construct_bi_term_dict(args, raw_doc_dict)
-    elif args.extended_biword:
-        term_dict = construct_extended_biword_dict(args, raw_doc_dict)
+        term_dict_with_positional_index = construct_biword_dict_with_positional_index(args, raw_doc_dict)
+        term_dict = construct_term_dict(args, term_dict_with_positional_index, name)
+        vector_model = construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+        return term_dict, term_dict_with_positional_index, vector_model
+    if args.extended_biword:
+        term_dict_with_positional_index = construct_extended_biword_dict_with_positional_index(args, raw_doc_dict)
+        term_dict = construct_term_dict(args, term_dict_with_positional_index, name)
+        vector_model = construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+        return term_dict, term_dict_with_positional_index, vector_model
     else:
-        term_dict = construct_term_dict(args, raw_doc_dict)
-    term_dict_with_positional_index = construct_positional_index(args, term_dict, raw_doc_dict, name)
-    vector_model = construct_vector_model(args, raw_doc_dict, term_dict_with_positional_index, )
-    return term_dict, term_dict_with_positional_index, vector_model
+        term_dict_with_positional_index = construct_term_dict_with_positional_index(args, raw_doc_dict)
+        term_dict = construct_term_dict(args, term_dict_with_positional_index, name)
+        vector_model = construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+        return term_dict, term_dict_with_positional_index, vector_model
 
 
 def construct_engine(args):
@@ -214,23 +241,23 @@ def construct_engine(args):
 
     raw_doc_dict = read_files(data_path)
 
-    # At least (default) we should construct a term dict and its corresponding vector model.
-    term_dict, term_dict_with_positional_index, vector_model = construct_dict_with_vector_model(args, raw_doc_dict,
-                                                                                                "term dict")
-
-    # if args.biword:
-    #     construct_dict_with_vector_model(args, raw_doc_dict, "biword dict")
-    #
-    # if args.extended_biword:
-    #     construct_dict_with_vector_model(args, raw_doc_dict, "extended biword")
-
+    if args.biword:
+        term_dict, term_dict_with_positional_index, vector_model = construct_dict_with_vector_model(args, raw_doc_dict,
+                                                                                                    "biword dict")
+        return term_dict, term_dict_with_positional_index, vector_model
+    if args.extended_biword:
+        term_dict, term_dict_with_positional_index, vector_model = construct_dict_with_vector_model(
+            args, raw_doc_dict, "extended biword dict")
+        return term_dict, term_dict_with_positional_index, vector_model
     # positional index will be created anyway for vector model
     if args.pos:
         pass
     if args.mixed:
         pass
 
-    # compress_index(args)
+    # At least (default) we should construct a term dict and its corresponding vector model.
+    term_dict, term_dict_with_positional_index, vector_model = construct_dict_with_vector_model(args, raw_doc_dict,
+                                                                                                "term dict")
 
     return term_dict, term_dict_with_positional_index, vector_model
 
@@ -383,6 +410,7 @@ def main():
     end = time.time()
     print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
     return term_dict, term_dict_with_positional_index, vector_model
+
 
 if __name__ == '__main__':
     main()

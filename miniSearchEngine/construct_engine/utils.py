@@ -3,17 +3,19 @@ import csv
 import pandas as pd
 
 
-def insert_term2dict(term, _dict, doc_id):
+def insert_term2dict(term, _dict, doc_id, pos_id):
     if term != "":
         if term not in _dict.keys():
             _dict[term] = dict()
             _dict[term]['doc_feq'] = 1
             _dict[term]['posting_list'] = dict()  # This is for future modification
-            _dict[term]['posting_list'][doc_id] = list()
+            _dict[term]['posting_list'][doc_id] = [pos_id]
         else:
             if doc_id not in _dict[term]['posting_list'].keys():
                 _dict[term]['doc_feq'] += 1
-                _dict[term]['posting_list'][doc_id] = list()
+                _dict[term]['posting_list'][doc_id] = [pos_id]
+            else:
+                _dict[term]['posting_list'][doc_id].append(pos_id)
 
 
 def write_term_dict2disk(term_dict, filename):
