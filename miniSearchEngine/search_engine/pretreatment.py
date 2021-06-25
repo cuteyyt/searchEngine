@@ -4,7 +4,8 @@ import operator
 pre_term_dict = {}
 pre_term_dict_with_positional_index = {}
 spell_correction_dict = {}
-wildcards_dict = {}
+wildcards_dict_prefix = {}
+wildcards_dict_suffix = {}
 
 
 def spell_correction_cmp(x, y):
@@ -23,9 +24,17 @@ def spell_correction_cmp(x, y):
     return 0
 
 
+def wildcards_suffix_cmp(x,y):
+    if x[::-1] < y[::-1]:
+        return -1
+    if x[::-1] > y[::-1]:
+        return 1
+    return 0
+
+
 def initialize(term_dict, term_dict_with_positional_index):
     global pre_term_dict, pre_term_dict_with_positional_index
-    global spell_correction_dict, wildcards_dict
+    global spell_correction_dict, wildcards_dict_prefix, wildcards_dict_suffix
     pre_term_dict = term_dict
     pre_term_dict_with_positional_index = term_dict_with_positional_index
     term_list = list(term_dict.keys())
@@ -34,10 +43,22 @@ def initialize(term_dict, term_dict_with_positional_index):
     last_letter = term_list[0][0]
     for i in range(1, len(term_list)):
         if term_list[i][0] != last_letter:
-            wildcards_dict[last_letter] = term_list[last_pos:i]
+            wildcards_dict_prefix[last_letter] = term_list[last_pos:i]
             last_letter = term_list[i][0]
             last_pos = i
-    wildcards_dict[last_letter] = term_list[last_pos:]
+    wildcards_dict_prefix[last_letter] = term_list[last_pos:]
+
+
+    term_list.sort(key=functools.cmp_to_key(wildcards_suffix_cmp))
+    last_pos = 0
+    last_letter = term_list[0][-1]
+    for i in range(1, len(term_list)):
+        if term_list[i][-1] != last_letter:
+            wildcards_dict_prefix[last_letter] = term_list[last_pos:i]
+            last_letter = term_list[i][-1]
+            last_pos = i
+    wildcards_dict_prefix[last_letter] = term_list[last_pos:]
+
 
     term_list.sort(key=functools.cmp_to_key(spell_correction_cmp))
 
@@ -57,9 +78,15 @@ def get_spell_correction_dict(initial_letter, word_length):
     return []
 
 
-def get_wildcards_dict(initial_letter):
-    if initial_letter in wildcards_dict:
-        return wildcards_dict[initial_letter]
+def get_wildcards_dict_prefix(initial_letter):
+    if initial_letter in wildcards_dict_prefix:
+        return wildcards_dict_prefix[initial_letter]
+    return []
+
+
+def get_wildcards_dict_suffix(end_letter):
+    if end_letter in wildcards_dict_suffix:
+        return wildcards_dict_suffix[end_letter]
     return []
 
 
