@@ -18,7 +18,7 @@ def calc_edition_distance(str1, str2):
     return f[len1-1][len2-1]
 
 
-def get_similar_words(bad_word, dis = 2):
+def get_similar_words(bad_word, dis=2):
     candidate_words = []
     for i in range(len(bad_word) - dis if len(bad_word) > dis else 0, len(bad_word) + dis):
         candidate_words = candidate_words + get_spell_correction_dict(bad_word[0], i)
@@ -34,6 +34,8 @@ def get_similar_words(bad_word, dis = 2):
 def correct_bad_words(bad_word):
     candidate_words = get_similar_words(bad_word)
     max_freq = 0
+    if len(candidate_words) == 0:
+        return ""
     best_word = candidate_words[0]
     for word_tuple in candidate_words:
         word_freq = get_frequency(word_tuple[0])
