@@ -1,16 +1,12 @@
+from .spell_correction import correct_bad_words
+
+
 BRACKETS_LEFT = "("
 BRACKETS_RIGHT = ")"
 SPACES_REDUNDANCY = " "
 OPT_AND = "&"
 OPT_OR = "|"
 OPT_NOT = "~"
-
-
-def dict_to_slice(doc_dict):
-    doc_slice = []
-    for key in doc_dict:
-        doc_slice.append(key)
-    return doc_slice
 
 
 def bool_opt_and(docs1, docs2):
@@ -66,7 +62,7 @@ def bool_opt_not(docs1, max_doc_num=100):
     return ret
 
 
-def bool_search(query_list, term_dict):
+def bool_search(query_list, term_dict, word_correction=True):
     if len(query_list) == 0:
         print("???")
         return
@@ -93,10 +89,19 @@ def bool_search(query_list, term_dict):
         elif word == OPT_NOT:
             sta.append(OPT_NOT)
         else:
+            if word not in term_dict and word_correction:
+                new_word = correct_bad_words(word)
+                print(word, "can't be recognized. Do you mean", new_word, "?")
+                print("We have show you the result of", new_word)
+                print("If you still want to search", word, "please use ",
+                      '"! close word correction" or "! close wc" to close word correction')
+                word = new_word
+
             if word in term_dict:
-                term_slice = dict_to_slice(term_dict[word]['posting_list'])
+                term_slice = list(term_dict[word]['posting_list'].keys())
             else:
                 term_slice = []
+
             sta.append(term_slice)
             print(word, term_slice)
 
