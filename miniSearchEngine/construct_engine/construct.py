@@ -136,7 +136,7 @@ def construct_positional_index(args, term_dict, raw_doc_dict, filename):
     return term_dict_with_positional_index
 
 
-def construct_vector_model(args, term_dict, doc_dict):
+def construct_vector_model(args, doc_dict, term_dict):
     print("\tI'm creating the vector model...")
     start = time.time()
 
@@ -192,34 +192,47 @@ def construct_vector_model(args, term_dict, doc_dict):
     return vector_model
 
 
+def construct_dict_with_vector_model(args, raw_doc_dict, name):
+    if args.biword:
+        term_dict = construct_bi_term_dict(args, raw_doc_dict)
+    elif args.extended_biword:
+        term_dict = construct_extended_biword_dict(args, raw_doc_dict)
+    else:
+        term_dict = construct_term_dict(args, raw_doc_dict)
+    term_dict_with_positional_index = construct_positional_index(args, term_dict, raw_doc_dict, name)
+    vector_model = construct_vector_model(args, raw_doc_dict, term_dict_with_positional_index, )
+    return term_dict, term_dict_with_positional_index, vector_model
+
+
 def construct_engine(args):
     """
 
     :param args:
     :return:
     """
-    # data_path = args.data_path
+    data_path = args.data_path
+
+    raw_doc_dict = read_files(data_path)
+
+    # At least (default) we should construct a term dict and its corresponding vector model.
+    term_dict, term_dict_with_positional_index, vector_model = construct_dict_with_vector_model(args, raw_doc_dict,
+                                                                                                "term dict")
+
+    # if args.biword:
+    #     construct_dict_with_vector_model(args, raw_doc_dict, "biword dict")
     #
-    # # At least (default) we should construct a term dict and its corresponding vector model.
-    # raw_doc_dict = read_files(data_path)
-    # # preprocessed_doc_dict = preprocess_for_docs(args, raw_doc_dict)
-    # term_dict = construct_term_dict(args, raw_doc_dict)
-    #
-    # term_dict_with_positional_index = construct_positional_index(args, term_dict, raw_doc_dict, "term dict")
-    #
-    # vector_model = construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict)
-    if args.biword:
-        pass
-    if args.extended_biword:
-        pass
+    # if args.extended_biword:
+    #     construct_dict_with_vector_model(args, raw_doc_dict, "extended biword")
+
+    # positional index will be created anyway for vector model
     if args.pos:
         pass
     if args.mixed:
         pass
 
-    compress_index(args)
+    # compress_index(args)
 
-    # return term_dict, vector_model
+    return term_dict, term_dict_with_positional_index, vector_model
 
 
 def check_parameter_integrity(args):
@@ -257,6 +270,10 @@ def check_parameter_integrity(args):
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_pos_id))
 
     # Check arg relationships
+    if not args.pos:
+        print("Note: positional index will be created anyway for tf calculate and result display."
+              "However, set this FALSE means we will refer to the dict without positional index "
+              "and may have a faster query speed.")
     if (not args.biword) and (not args.pos) and (not args.mixed) and (not args.extended_biword):
         print("Warning: please set at least one of the "
               "[\'--biword\',\'--pos\',\'--mixed\',\'extended_biword\'] TRUE to enable phrase query.")
@@ -350,9 +367,10 @@ def main():
     parser.add_argument("--skip_list", type=bool, default=False,
                         help="Whether to use skip list when doing queries.")
 
+    args = parser.parse_args()
+
     print("I have received the task: construct search engine.")
     print("I'm using the following parameters:")
-    args = parser.parse_args()
     print(json.dumps(args.__dict__, indent=2))
 
     print("I'm checking the given parameters:")
@@ -361,10 +379,10 @@ def main():
 
     print("I'm doing the task: construct search engine...")
     start = time.time()
-    construct_engine(args)
+    term_dict, term_dict_with_positional_index, vector_model = construct_engine(args)
     end = time.time()
     print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
-
+    return term_dict, term_dict_with_positional_index, vector_model
 
 if __name__ == '__main__':
     main()
