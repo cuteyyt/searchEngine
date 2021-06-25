@@ -22,6 +22,27 @@ The program will create a `term dict` and a `vector model` based on the corpus. 
 Function `construct_engine` will return these two variables, you can use them in the program directly At the same time,
 they are saved to directory `engine`. You can check the chapter below to see the detailed data structure.
 
+3. Bool Search
+
+Input should follow such format(spaces are needed anywhere)：
+
+```
+word
+word1 word2
+word1 & word2 
+word1 | word2
+~ word
+( word )
+```
+
+example:
+
+```
+( five | ~ company ) & shares
+```
+
+
+
 ## Data structure
 
 ### term dict
@@ -39,8 +60,8 @@ term_dict = {
 
 The corresponding csv file is 'engine/term_dict.csv'.
 
-|term | doc_feq | posting_list | 
-| ---- | ---- | ---- | 
+|term | doc_feq | posting_list |
+| ---- | ---- | ---- |
 | a | 1 | {1:[2,3, ...]} |
 
 ### vector model
@@ -63,8 +84,8 @@ vector_model = {
 
 The corresponding csv file is 'engine/term_dict.csv'.
 
-| |term | doc_id | doc_id | 
-| ---- | ---- | ---- | ---- | 
+| |term | doc_id | doc_id |
+| ---- | ---- | ---- | ---- |
 | | a | 1.1 | 2.2 |
 | | b | 1.1 | 2.2 |
 
