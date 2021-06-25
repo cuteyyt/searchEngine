@@ -41,10 +41,3 @@ def gamma_decoding(encoded):
     decoded = int('1' + encoded[pos + 1:], 2)
     # print(decoded)
     return decoded
-
-
-if __name__ == '__main__':
-    # vb_decoding('10000101')
-    # vb_decoding('000011010000110010110001')
-    gamma_decoding('1110101')
-    # gamma_decoding()

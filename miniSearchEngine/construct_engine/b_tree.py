@@ -62,36 +62,35 @@ class Node:
         self.write_data_to_file(self.filename)
 
     def split_node(self):
-        global file_counter
-        newNode = Node()
-        newNode.filename = str(file_counter)
+        new_node = Node()
+        new_node.filename = str(file_counter)
         file_counter = file_counter + 1
         if self.is_leaf:
-            newNode.is_leaf = True
+            new_node.is_leaf = True
             mid = len(self.keys) / 2
             midKey = self.keys[mid]
             # Update sibling parameters
-            newNode.keys = self.keys[mid:]
-            newNode.children = self.children[mid:]
+            new_node.keys = self.keys[mid:]
+            new_node.children = self.children[mid:]
             # Update node parameters
             self.keys = self.keys[:mid]
             self.children = self.children[:mid]
             # Update next node pointers
-            newNode.next = self.next
-            self.next = newNode.filename
+            new_node.next = self.next
+            self.next = new_node.filename
         else:
-            newNode.is_leaf = False
+            new_node.is_leaf = False
             mid = len(self.keys) / 2
             midKey = self.keys[mid]
             # Update sibling parameters
-            newNode.keys = self.keys[mid + 1:]
-            newNode.children = self.children[mid + 1:]
+            new_node.keys = self.keys[mid + 1:]
+            new_node.children = self.children[mid + 1:]
             # Update node parameters
             self.keys = self.keys[:mid]
             self.children = self.children[:mid + 1]
         self.update_node()
-        newNode.update_node()
-        return midKey, newNode
+        new_node.update_node()
+        return midKey, new_node
 
 
 class BPlusTree:

@@ -1,0 +1,21 @@
+{
+  "data_path": "Reuters/",
+  "engine_path": "engine/2021_06_25_13_07_09",
+  "store_preprocessed": true,
+  "seg": 1,
+  "stop": 0,
+  "norm": false,
+  "lem": false,
+  "stem": false,
+  "biword": false,
+  "pos": true,
+  "mixed": false,
+  "extended_biword": false,
+  "tree": 0,
+  "permuterm": false,
+  "gram": 0,
+  "compress_term": "single",
+  "compress_doc_id": "vb",
+  "compress_pos_id": "none",
+  "skip_list": false
+}
