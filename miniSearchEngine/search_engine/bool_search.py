@@ -91,11 +91,12 @@ def bool_search(query_list, term_dict, word_correction=True):
         else:
             if word not in term_dict and word_correction:
                 new_word = correct_bad_words(word)
-                print(word, "can't be recognized. Do you mean", new_word, "?")
-                print("We have show you the result of", new_word)
-                print("If you still want to search", word, "please use ",
-                      '"! close word correction" or "! close wc" to close word correction')
-                word = new_word
+                if new_word != "":
+                    print(word, "can't be recognized. Do you mean", new_word, "?")
+                    print("We have show you the result of", new_word)
+                    print("If you still want to search", word, "please use ",
+                          '"! close word correction" or "! close wc" to close word correction')
+                    word = new_word
 
             if word in term_dict:
                 term_slice = list(term_dict[word]['posting_list'].keys())
