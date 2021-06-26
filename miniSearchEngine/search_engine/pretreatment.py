@@ -4,7 +4,6 @@ from ..construct_engine.utils import get_engine_from_csv
 
 engine_path = "engine/2021_06_27_00_12_09"
 pre_term_dict = {}
-pre_term_dict_with_positional_index = {}
 spell_correction_dict = {}
 rotation_index = {}
 
@@ -110,7 +109,7 @@ def get_rotation_index(prefix):
 def get_frequency(word):
     global pre_term_dict
     if not bool(pre_term_dict):
-        pre_term_dict = get_engine_from_csv(engine_path, "term_dict")
+        pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
 
     if word in pre_term_dict:
         return pre_term_dict[word]['doc_feq']
@@ -120,5 +119,5 @@ def get_frequency(word):
 def get_term_dict():
     global pre_term_dict
     if not bool(pre_term_dict):
-        pre_term_dict = get_engine_from_csv(engine_path, "term_dict")
+        pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
     return pre_term_dict

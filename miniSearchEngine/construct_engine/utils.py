@@ -101,7 +101,7 @@ def display_query_result_detailed(data_path, term, pos, k=10):
         doc_name = filenames[doc_id]
         print("{}: {}".format(doc_name, term))
         print("----------------------------------------------------------")
-        with open(doc_name, "r") as file:
+        with open(os.path.join(data_path, doc_name), "r") as file:
             content = file.read()
             raw_term_list = content.split(" ")
             for pos_id in pos[doc_id]:

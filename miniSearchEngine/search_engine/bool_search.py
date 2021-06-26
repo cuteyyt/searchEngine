@@ -83,6 +83,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
     term_dict = get_term_dict()
 
     sta = []
+    words = []
 
     for word in query_list:
         if word == SPACES_REDUNDANCY or word == "":
@@ -115,6 +116,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                 sta.append(term_slice)
                 highlight_info("using wildcards search, words matched: " + str(candidate_words))
                 plain_info("docs with these words are: " + str(term_slice))
+                words = words + candidate_words
             # no wildcards search
             else:
                 # word correction
@@ -127,6 +129,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                 # normal search
                 if word in term_dict:
                     term_slice = list(term_dict[word]['posting_list'].keys())
+                    words.append(word)
                 else:
                     term_slice = []
 
@@ -154,4 +157,13 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
     if len(sta) > 1 or not isinstance(sta[0], list):
         error_info("ERROR! Syntax failed!")
         return
-    return sta[0]
+
+    ret = {}
+
+    for word in words:
+        ret[word] = {}
+        for doc in sta[0]:
+            if doc in term_dict[word]['posting_list']:
+                ret[word][doc] = term_dict[word]['posting_list'][doc]
+
+    return ret, sta[0]

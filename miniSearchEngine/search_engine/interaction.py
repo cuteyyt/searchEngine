@@ -2,6 +2,7 @@ import time
 
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info
+from ..construct_engine.utils import display_query_result, display_query_result_detailed
 
 
 close_word_correction = ["! close word correction", "! close wc"]
@@ -26,13 +27,16 @@ def start():
         if query in EXIT_COMMAND:
             break
         query_start = time.time()
-        ret = bool_search(query, word_correction)
+        ret_pos, ret = bool_search(query, word_correction)
         query_end = time.time()
         success_info("Successfully handle query {} in {:.4f} seconds.".format(query, query_end - query_start))
         if ret is None:
             warning_info("Please input your query in format!")
         else:
             plain_info(ret)
+            print(ret_pos)
+            for term in ret_pos:
+                display_query_result_detailed("Reuters/", term, ret_pos[term])
 
     success_info("Bye~")
 
