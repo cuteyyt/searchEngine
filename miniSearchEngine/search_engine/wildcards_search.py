@@ -49,6 +49,8 @@ def check_wildcards(word, word_pieces, prefix="", suffix=""):
 def get_wildcards_word(word):
     word_pieces = word.split('*')
     word_pieces = [i for i in word_pieces if i != '']
+    if len(word_pieces) == 0:
+        return
     prefix = ""
     suffix = ""
     if word[0] != '*':

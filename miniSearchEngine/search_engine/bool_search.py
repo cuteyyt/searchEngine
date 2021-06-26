@@ -93,10 +93,11 @@ def bool_search(query_list, term_dict, word_correction=True, wildcards_search=Tr
         else:
             # handle wildcards search
             if wildcards_search and WILDCARDS_STAR in word:
-                if len(word) <= 1:
+                candidate_words = get_wildcards_word(word)
+                if candidate_words is None:
                     print("wildcards can't be '*' only!")
                     return
-                candidate_words = get_wildcards_word(word)
+
                 term_slice = []
                 for candidate_word in candidate_words:
                     term_slice = bool_opt_or(term_slice, list(term_dict[candidate_word]['posting_list'].keys()))
