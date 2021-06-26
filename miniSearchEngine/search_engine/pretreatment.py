@@ -4,8 +4,7 @@ import operator
 pre_term_dict = {}
 pre_term_dict_with_positional_index = {}
 spell_correction_dict = {}
-wildcards_dict_prefix = {}
-wildcards_dict_suffix = {}
+rotation_index = {}
 
 
 def spell_correction_cmp(x, y):
@@ -32,33 +31,35 @@ def wildcards_suffix_cmp(x,y):
     return 0
 
 
+def initialize_rotation_index(term_list):
+    global rotation_index
+    rotated_term_list = []
+    for word_src in term_list:
+        word = word_src + '$'
+        lens = len(word)
+        rotated_term_list.append((word, word_src))
+        for i in range(1, lens):
+            rotated_term_list.append((word[i:]+word[0:i], word_src))
+    rotated_term_list.sort(key=lambda word_tuple: word_tuple[0])
+
+    last_pos = 0
+    last_2_letter = rotated_term_list[0][0][0:2]
+    for i in range(1, len(rotated_term_list)):
+        if rotated_term_list[i][0][0:2] != last_2_letter:
+            rotation_index[last_2_letter] = rotated_term_list[last_pos:i]
+            last_2_letter = rotated_term_list[i][0][0:2]
+            last_pos = i
+    rotation_index[last_2_letter] = rotated_term_list[last_pos:]
+
+
 def initialize(term_dict, term_dict_with_positional_index):
     global pre_term_dict, pre_term_dict_with_positional_index
-    global spell_correction_dict, wildcards_dict_prefix, wildcards_dict_suffix
+    global spell_correction_dict
     pre_term_dict = term_dict
     pre_term_dict_with_positional_index = term_dict_with_positional_index
     term_list = list(term_dict.keys())
 
-    last_pos = 0
-    last_letter = term_list[0][0]
-    for i in range(1, len(term_list)):
-        if term_list[i][0] != last_letter:
-            wildcards_dict_prefix[last_letter] = term_list[last_pos:i]
-            last_letter = term_list[i][0]
-            last_pos = i
-    wildcards_dict_prefix[last_letter] = term_list[last_pos:]
-
-
-    term_list.sort(key=functools.cmp_to_key(wildcards_suffix_cmp))
-    last_pos = 0
-    last_letter = term_list[0][-1]
-    for i in range(1, len(term_list)):
-        if term_list[i][-1] != last_letter:
-            wildcards_dict_prefix[last_letter] = term_list[last_pos:i]
-            last_letter = term_list[i][-1]
-            last_pos = i
-    wildcards_dict_prefix[last_letter] = term_list[last_pos:]
-
+    initialize_rotation_index(term_list)
 
     term_list.sort(key=functools.cmp_to_key(spell_correction_cmp))
 
@@ -78,15 +79,18 @@ def get_spell_correction_dict(initial_letter, word_length):
     return []
 
 
-def get_wildcards_dict_prefix(initial_letter):
-    if initial_letter in wildcards_dict_prefix:
-        return wildcards_dict_prefix[initial_letter]
-    return []
+def get_rotation_index(prefix):
+    if len(prefix) < 1:
+        print("get rotation index: prefix is null")
+    if len(prefix) == 1:
+        ret = []
+        for key in rotation_index:
+            if key[0] == prefix[0]:
+                ret = ret + rotation_index[key]
+        return ret
 
-
-def get_wildcards_dict_suffix(end_letter):
-    if end_letter in wildcards_dict_suffix:
-        return wildcards_dict_suffix[end_letter]
+    if prefix[0:2] in rotation_index:
+        return rotation_index[prefix[0:2]]
     return []
 
 

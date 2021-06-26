@@ -1,4 +1,5 @@
 from .spell_correction import correct_bad_words
+from .wildcards_search import get_wildcards_word
 
 
 BRACKETS_LEFT = "("
@@ -7,6 +8,7 @@ SPACES_REDUNDANCY = " "
 OPT_AND = "&"
 OPT_OR = "|"
 OPT_NOT = "~"
+WILDCARDS_STAR = "*"
 
 
 def bool_opt_and(docs1, docs2):
@@ -62,9 +64,9 @@ def bool_opt_not(docs1, max_doc_num=100):
     return ret
 
 
-def bool_search(query_list, term_dict, word_correction=True):
+def bool_search(query_list, term_dict, word_correction=True, wildcards_search=True):
     if len(query_list) == 0:
-        print("???")
+        print("Input can't be empty.")
         return
 
     query_list = query_list.split(' ')
@@ -89,22 +91,37 @@ def bool_search(query_list, term_dict, word_correction=True):
         elif word == OPT_NOT:
             sta.append(OPT_NOT)
         else:
-            if word not in term_dict and word_correction:
-                new_word = correct_bad_words(word)
-                if new_word != "":
-                    print(word, "can't be recognized. Do you mean", new_word, "?")
-                    print("We have show you the result of", new_word)
-                    print("If you still want to search", word, "please use ",
-                          '"! close word correction" or "! close wc" to close word correction')
-                    word = new_word
-
-            if word in term_dict:
-                term_slice = list(term_dict[word]['posting_list'].keys())
-            else:
+            # handle wildcards search
+            if wildcards_search and WILDCARDS_STAR in word:
+                if len(word) <= 1:
+                    print("wildcards can't be '*' only!")
+                    return
+                candidate_words = get_wildcards_word(word)
                 term_slice = []
+                for candidate_word in candidate_words:
+                    term_slice = bool_opt_or(term_slice, list(term_dict[candidate_word]['posting_list'].keys()))
+                sta.append(term_slice)
+                print("using wildcards search, words matched:", candidate_words)
+                print("docs with these words are:", term_slice)
+            # no wildcards search
+            else:
+                # word correction
+                if word_correction and word not in term_dict:
+                    new_word = correct_bad_words(word)
+                    if new_word != "":
+                        print(word, "can't be recognized. Do you mean", new_word, "?")
+                        print("We have show you the result of", new_word)
+                        print("If you still want to search", word, "please use ",
+                              '"! close word correction" or "! close wc" to close word correction')
+                        word = new_word
+                # normal search
+                if word in term_dict:
+                    term_slice = list(term_dict[word]['posting_list'].keys())
+                else:
+                    term_slice = []
 
-            sta.append(term_slice)
-            print(word, term_slice)
+                sta.append(term_slice)
+                print(word, term_slice)
 
         while isinstance(sta[-1], list):
             if len(sta) >= 2 and isinstance(sta[-2], list):
