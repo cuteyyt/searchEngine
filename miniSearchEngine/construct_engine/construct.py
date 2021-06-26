@@ -28,8 +28,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i, filename in enumerate(filenames):
         # FIXME: Choose first 100 files for debug.
-        if i >= 100:
-            break
+        # if i >= 100:
+        #     break
         with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
             doc_dict[i + 1] = dict()
@@ -265,9 +265,6 @@ def check_parameter_integrity(args):
     if args.compress_doc_id not in ['none', 'vb', 'gamma']:
         raise ValueError("Unsupported compress/encode doc id mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_doc_id))
-    if args.compress_pos_id not in ['none', 'vb', 'gamma']:
-        raise ValueError("Unsupported compress/encode pos id mode {}, "
-                         "use command \"construct_engine -h\" to see more details.".format(args.compress_pos_id))
 
     # Check arg relationships
     if not args.pos:
@@ -343,7 +340,7 @@ def main():
                         help="Whether to create a permuterm index.")
     parser.add_argument("--gram", type=int, default=0,
                         help="Whether to create a K-gram index."
-                             "0 stands for NOT and other POSITIVE INTEGER stands for the K value.")
+                             "0 stands for NOT and other POSITIVE INTEGER stands for the K value_.")
 
     # index compression (as postprocess)
     parser.add_argument("--compress_term", type=str, default="single",
@@ -356,12 +353,6 @@ def main():
                              "none: keep original form."
                              "vb: use vb encoding."
                              "gamma: use gamma encoding.")
-    parser.add_argument("--compress_pos_id", type=str, default="none",
-                        help="Whether to compress positional index, only valid when specify positional index."
-                             "none: keep original form."
-                             "vb: use vb encoding."
-                             "gamma: use gamma encoding."
-                        )
 
     # Effective when doing queries
     parser.add_argument("--skip_list", type=bool, default=False,

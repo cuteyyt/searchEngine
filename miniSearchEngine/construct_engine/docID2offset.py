@@ -10,7 +10,7 @@ def docID2offset(filename):
     posting_list=posting_list[:]
     newdict={}
     for index,value in posting_list.items():
-        #print(index,value)
+        #print(index,value_)
         tmp_dict=eval(value)
         keys=list(tmp_dict.keys())
         length=len(keys)
