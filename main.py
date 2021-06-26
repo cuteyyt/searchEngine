@@ -24,4 +24,4 @@ if __name__ == '__main__':
     print(rotation_index == rotation_index)
     # sentence = "this is an example."
     # print(preprocess_for_query(sentence, engine_path))
-    # start(term_dict, term_dict_with_positional_index, vector_model)
+    start()

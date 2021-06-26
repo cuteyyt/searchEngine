@@ -326,7 +326,7 @@ def main():
                         help="Path to store the posting list, vector model and other necessary files.")
 
     # Only used for presentation
-    parser.add_argument("--presentation", type=bool, default=True,
+    parser.add_argument("--presentation", type=bool, default=False,
                         help="Used only for presentation to construct index as fast as we can.")
 
     # Preprocess
