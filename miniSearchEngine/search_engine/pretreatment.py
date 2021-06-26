@@ -24,7 +24,7 @@ def spell_correction_cmp(x, y):
     return 0
 
 
-def wildcards_suffix_cmp(x,y):
+def wildcards_suffix_cmp(x, y):
     if x[::-1] < y[::-1]:
         return -1
     if x[::-1] > y[::-1]:
@@ -75,23 +75,22 @@ def initialize(term_dict):
     return spell_correction_dict, rotation_index
 
 
-def get_spell_correction_dict(initial_letter, word_length):
-    global spell_correction_dict, pre_term_dict
-    if not bool(spell_correction_dict):
-        get_term_dict()
-        initialize(pre_term_dict)
+def set_dict(term_dict_, spell_correction_dict_, rotation_index_):
+    global pre_term_dict, spell_correction_dict, rotation_index
+    pre_term_dict = term_dict_
+    spell_correction_dict = spell_correction_dict_
+    rotation_index = rotation_index_
 
+
+def get_spell_correction_dict(initial_letter, word_length):
+    global spell_correction_dict
     if (initial_letter, word_length) in spell_correction_dict:
         return spell_correction_dict[(initial_letter, word_length)]
     return []
 
 
 def get_rotation_index(prefix):
-    global rotation_index, pre_term_dict
-    if not bool(rotation_index):
-        get_term_dict()
-        initialize(term_dict=pre_term_dict)
-
+    global rotation_index
     if len(prefix) < 1:
         print("get rotation index: prefix is null")
     if len(prefix) == 1:
@@ -108,9 +107,6 @@ def get_rotation_index(prefix):
 
 def get_frequency(word):
     global pre_term_dict
-    if not bool(pre_term_dict):
-        pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
-
     if word in pre_term_dict:
         return pre_term_dict[word]['doc_feq']
     return 0
@@ -118,6 +114,4 @@ def get_frequency(word):
 
 def get_term_dict():
     global pre_term_dict
-    if not bool(pre_term_dict):
-        pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
     return pre_term_dict

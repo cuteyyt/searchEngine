@@ -2,7 +2,7 @@ from miniSearchEngine.construct_engine.construct import main
 from miniSearchEngine.construct_engine.utils import get_engine_from_csv
 from miniSearchEngine.construct_engine.preprocess import preprocess_for_query
 from miniSearchEngine.search_engine.interaction import start
-from miniSearchEngine.search_engine.pretreatment import initialize
+from miniSearchEngine.search_engine.pretreatment import initialize, set_dict
 from miniSearchEngine.search_engine.utils import write_other_dict2disk
 from miniSearchEngine.construct_engine.utils import display_query_result, display_query_result_detailed
 
@@ -22,6 +22,8 @@ if __name__ == '__main__':
 
     print(spell_correction_dict == spell_correction_dict)
     print(rotation_index == rotation_index)
+
+    set_dict(term_dict, spell_correction_dict, rotation_index)
     # sentence = "this is an example."
     # print(preprocess_for_query(sentence, engine_path))
     start()
