@@ -52,11 +52,11 @@ def initialize_rotation_index(term_list):
     rotation_index[last_2_letter] = rotated_term_list[last_pos:]
 
 
-def initialize(term_dict, term_dict_with_positional_index):
-    global pre_term_dict, pre_term_dict_with_positional_index
+def initialize(term_dict):
+    global pre_term_dict
     global spell_correction_dict
     pre_term_dict = term_dict
-    pre_term_dict_with_positional_index = term_dict_with_positional_index
+    # pre_term_dict_with_positional_index = term_dict_with_positional_index
     term_list = list(term_dict.keys())
 
     initialize_rotation_index(term_list)
@@ -71,6 +71,7 @@ def initialize(term_dict, term_dict_with_positional_index):
             last_tuple = (term_list[i][0], len(term_list[i]))
             last_pos = i
     spell_correction_dict[last_tuple] = term_list[last_pos:]
+    return spell_correction_dict, rotation_index
 
 
 def get_spell_correction_dict(initial_letter, word_length):

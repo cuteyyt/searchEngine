@@ -1,5 +1,5 @@
 from .bool_search import bool_search
-from .pretreatment import initialize
+# from .pretreatment import initialize
 from .output_format import success_info, error_info, warning_info, plain_info
 
 
@@ -10,7 +10,7 @@ word_correction = True
 
 
 def start(term_dict=None, term_dict_with_positional_index=None, vector_model=None):
-    initialize(term_dict, term_dict_with_positional_index)
+    # initialize(term_dict, term_dict_with_positional_index)
 
     global word_correction
     while True:
