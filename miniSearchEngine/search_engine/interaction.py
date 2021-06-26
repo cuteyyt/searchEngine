@@ -1,7 +1,6 @@
 import time
 
 from .bool_search import bool_search
-# from .pretreatment import initialize
 from .output_format import success_info, error_info, warning_info, plain_info
 
 
@@ -11,8 +10,7 @@ EXIT_COMMAND = ["! exit"]
 word_correction = True
 
 
-def start(term_dict=None, term_dict_with_positional_index=None, vector_model=None):
-    # initialize(term_dict, term_dict_with_positional_index)
+def start():
 
     global word_correction
     while True:
@@ -28,9 +26,9 @@ def start(term_dict=None, term_dict_with_positional_index=None, vector_model=Non
         if query in EXIT_COMMAND:
             break
         query_start = time.time()
-        ret = bool_search(query, term_dict, word_correction)
+        ret = bool_search(query, word_correction)
         query_end = time.time()
-        print("Query:", query, "took", query_end-query_start, "million seconds")
+        success_info("Successfully handle query {} in {:.4f} seconds.".format(query, query_end - query_start))
         if ret is None:
             warning_info("Please input your query in format!")
         else:

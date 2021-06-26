@@ -1,6 +1,8 @@
 import functools
 import operator
+from ..construct_engine.utils import get_engine_from_csv
 
+engine_path = "engine/2021_06_27_00_12_09"
 pre_term_dict = {}
 pre_term_dict_with_positional_index = {}
 spell_correction_dict = {}
@@ -75,12 +77,22 @@ def initialize(term_dict):
 
 
 def get_spell_correction_dict(initial_letter, word_length):
+    global spell_correction_dict, pre_term_dict
+    if not bool(spell_correction_dict):
+        get_term_dict()
+        initialize(pre_term_dict)
+
     if (initial_letter, word_length) in spell_correction_dict:
         return spell_correction_dict[(initial_letter, word_length)]
     return []
 
 
 def get_rotation_index(prefix):
+    global rotation_index, pre_term_dict
+    if not bool(rotation_index):
+        get_term_dict()
+        initialize(term_dict=pre_term_dict)
+
     if len(prefix) < 1:
         print("get rotation index: prefix is null")
     if len(prefix) == 1:
@@ -96,7 +108,17 @@ def get_rotation_index(prefix):
 
 
 def get_frequency(word):
+    global pre_term_dict
+    if not bool(pre_term_dict):
+        pre_term_dict = get_engine_from_csv(engine_path, "term_dict")
+
     if word in pre_term_dict:
         return pre_term_dict[word]['doc_feq']
     return 0
 
+
+def get_term_dict():
+    global pre_term_dict
+    if not bool(pre_term_dict):
+        pre_term_dict = get_engine_from_csv(engine_path, "term_dict")
+    return pre_term_dict
