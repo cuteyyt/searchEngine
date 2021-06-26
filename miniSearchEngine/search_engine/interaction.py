@@ -1,3 +1,5 @@
+import time
+
 from .bool_search import bool_search
 # from .pretreatment import initialize
 from .output_format import success_info, error_info, warning_info, plain_info
@@ -25,7 +27,10 @@ def start(term_dict=None, term_dict_with_positional_index=None, vector_model=Non
             continue
         if query in EXIT_COMMAND:
             break
+        query_start = time.time()
         ret = bool_search(query, term_dict, word_correction)
+        query_end = time.time()
+        print("Query:", query, "took", query_end-query_start, "million seconds")
         if ret is None:
             warning_info("Please input your query in format!")
         else:
