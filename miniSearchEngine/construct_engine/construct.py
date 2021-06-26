@@ -12,6 +12,8 @@ from nltk import pos_tag
 from .utils import insert_term2dict, write_term_dict2disk
 from .preprocess import preprocess_for_term
 
+import tqdm
+
 
 def read_files(data_path="Reuters"):
     """
@@ -217,22 +219,51 @@ def construct_engine(args):
     :return:
     """
     start = time.time()
-    data_path = args.data_path
+    if args.presentation:
+        data_path = args.data_path
+        if len(os.listdir(data_path)) == 0:
+            raise ValueError("No file in directory {}".format(data_path))
+        filenames = os.listdir(data_path)
+        # filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+        term_dict = dict()
+        for i, filename in enumerate(filenames):
+            # FIXME: Choose first 100 files for debug.
+            # if i >= 100:
+            #     break
+            with open(os.path.join(data_path, filename), 'r') as file:
+                content = file.read()
+                raw_term_list = content.split(" ")
+                for term in raw_term_list:
+                    term = preprocess_for_term(args, term)
+                    if term != "":
+                        if term not in term_dict.keys():
+                            term_dict[term] = dict()
+                            term_dict[term]['posting_list'] = dict()
+                            term_dict[term]['posting_list'][i + 1] = None
+                        else:
+                            if (i + 1) not in term_dict[term]['posting_list'].keys():
+                                term_dict[term]['posting_list'][i + 1] = None
+            file.close()
+        end = time.time()
+        print("I have done the task \"construct search engine\" with {} files in {:.4f} seconds.".format(len(filenames),
+                                                                                                         end - start))
+    else:
+        data_path = args.data_path
 
-    raw_doc_dict = read_files(data_path)
-    construct_dict_with_vector_model(args, raw_doc_dict)
+        raw_doc_dict = read_files(data_path)
+        construct_dict_with_vector_model(args, raw_doc_dict)
 
-    end = time.time()
-    print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
+        end = time.time()
+        print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
 
-    exist_engine_names = ['term_dict', 'term_dict_with_positional_index', 'term_dict_vector_model']
-    if args.biword:
-        exist_engine_names += ['biword_dict', 'biword_dict_with_positional_index', 'biword_dict_vector_model']
-    if args.extended_biword:
-        exist_engine_names += ['extended_biword_dict', 'extended_biword_dict_with_positional_index',
-                               'extended_biword_dict_vector_model']
-    print("{:d} engine files [{}] have been saved to path: {}".format(len(exist_engine_names), exist_engine_names,
-                                                                      args.engine_path))
+        exist_engine_names = ['term_dict', 'term_dict_with_positional_index', 'term_dict_vector_model']
+        if args.biword:
+            exist_engine_names += ['biword_dict', 'biword_dict_with_positional_index', 'biword_dict_vector_model']
+        if args.extended_biword:
+            exist_engine_names += ['extended_biword_dict', 'extended_biword_dict_with_positional_index',
+                                   'extended_biword_dict_vector_model']
+        print("{:d} engine files [{}] have been saved to path: {}".format(len(exist_engine_names), exist_engine_names,
+                                                                          args.engine_path))
 
 
 def check_parameter_integrity(args):
@@ -259,9 +290,6 @@ def check_parameter_integrity(args):
             "Although k-gram with k larger than 5 is theoretically allowed, "
             "the construction process will fail if the space or time reaches limit."
             "use command \"construct_engine -h\" to see more details.".format(args.gram))
-    if args.compress_term not in ['none', 'single', 'block']:
-        raise ValueError("Unsupported compress term mode {}, "
-                         "use command \"construct_engine -h\" to see more details.".format(args.compress_term))
     if args.compress_doc_id not in ['none', 'vb', 'gamma']:
         raise ValueError("Unsupported compress/encode doc id mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_doc_id))
@@ -296,6 +324,10 @@ def main():
                         help="Path to the directory which contains raw data files.")
     parser.add_argument("--engine_path", type=str, default="engine/",
                         help="Path to store the posting list, vector model and other necessary files.")
+
+    # Only used for presentation
+    parser.add_argument("--presentation", type=bool, default=True,
+                        help="Used only for presentation to construct index as fast as we can.")
 
     # Preprocess
     parser.add_argument("--store_preprocessed", "--store", type=bool, default=False,
@@ -343,11 +375,6 @@ def main():
                              "0 stands for NOT and other POSITIVE INTEGER stands for the K value_.")
 
     # index compression (as postprocess)
-    parser.add_argument("--compress_term", type=str, default="single",
-                        help="Whether to compress the term, default is single."
-                             "none: Keep original form."
-                             "single: Compress terms based on a single string."
-                             "block: Compress terms based on block strategy.")
     parser.add_argument("--compress_doc_id", type=str, default="vb",
                         help="Whether to compress doc id."
                              "none: keep original form."
