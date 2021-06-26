@@ -6,10 +6,11 @@ def k_nearest_in_doc(df,term1,term2,k=5):
     返回值是三元组列表，三元组形式为:(文档编号，词项1在文档中的位置，词项2在文档中的位置)
     """
     answer=[]
-    dict1=eval(df[term1].iloc[1])
-    dict2=eval(df[term2].iloc[1])
-    print(dict1)
-    print(dict2)
+    df=df.set_index(["term"])
+    dict1=eval((df.loc[term1])["posting_list"])
+    dict2=eval((df.loc[term2])["posting_list"])
+    #print(dict1)
+    #print(dict2)
     k1=list(dict1.keys())
     k2=list(dict2.keys())
     len1=len(k1)
