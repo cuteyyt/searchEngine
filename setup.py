@@ -13,6 +13,7 @@ setup(name='miniSearchEngine',
           "pandas",
           "nltk",
           "jieba",
+          "easydict",
       ],
       entry_points={
           'console_scripts': [

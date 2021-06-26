@@ -1,26 +1,39 @@
-# searchEngine
+# 搜索引擎
 
-Project for ZJU 2021 Information Retrieval and Web Search
+浙江大学 2021 年春夏学期 **信息检索与WEB搜索** 课程大作业
 
-README稍后更新，不会用可以直接问我
+[toc]
 
-## Usage
+## 使用
 
-1. Environment setup (Add the corpus `Reuters` to path `searchEngine/`):
+### 文件组织
+
+等待完善
+
+### 环境配置
+
+需要 python 3.0 及以上版本。  
+推荐 conda 环境。
+
+### 安装 miniSearchEngine
 
 ```shell
-pip install -r requirements.txt
+git clone https://github.com/cuteyyt/searchEngine.git
+cd searchEngine
+pip install -e .
 ```
 
-2. Construct the Search Engine
-
+### 创建搜索引擎
 ```shell
-python main.py
+construct_engine
 ```
+使用默认参数，将会...
+```shell
+construct_engine -h
+```
+查看参数说明。
 
-The program will create a `term dict` and a `vector model` based on the corpus. Here I use 100 files as an example.
-Function `construct_engine` will return these two variables, you can use them in the program directly At the same time,
-they are saved to directory `engine`. You can check the chapter below to see the detailed data structure.
+### 查询/搜索
 
 3. Bool Search
 
@@ -41,30 +54,35 @@ example:
 ( five | ~ company ) & shares
 ```
 
+## 简要实现原理
 
+### 数据结构
 
-## Data structure
+#### 文档字典 doc dict
 
-### term dict
+```python
+doc_dict = {
+    1: {  # doc_id
+        'file_path': '1.html',  # 文档文件名
+        'text': 'mini search engine',  # 文档内容
+    },
+}
+```
+
+#### 词典 term dict
 
 ```python
 term_dict = {
-    'a': {  # term
-        'doc_feq': 1,  # term's tf
-        'posting_list': {  # posting list with positional index
-            1: [2, 3, ...]  # doc_id: [pos]
+    'a': {  # 词项
+        'doc_feq': 1,  # 文档频率
+        'posting_list': {  # 倒排索引
+            1: [2, 3, ...],  # 文档 id: [位置索引, ...]
         },
     },
 }
 ```
 
-The corresponding csv file is 'engine/term_dict.csv'.
-
-|term | doc_feq | posting_list |
-| ---- | ---- | ---- |
-| a | 1 | {1:[2,3, ...]} |
-
-### vector model
+#### 向量空间模型 vector model
 
 ```python
 vector_model = {
@@ -82,13 +100,4 @@ vector_model = {
 }
 ```
 
-The corresponding csv file is 'engine/term_dict.csv'.
-
-| |term | doc_id | doc_id |
-| ---- | ---- | ---- | ---- |
-| | a | 1.1 | 2.2 |
-| | b | 1.1 | 2.2 |
-
-### Others
-
-Note: tf value and df value has also been saved on disk. You can easily distinguish them by filename.
+## 其他

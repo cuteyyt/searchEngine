@@ -6,6 +6,8 @@ import nltk
 from nltk.corpus import stopwords as nltk_stopwords
 import jieba
 
+from .utils import parsing_json
+
 
 def segmentation(mode):
     # FIXME: Complete mode 0, 2, 3
@@ -111,3 +113,11 @@ def preprocess_for_docs(args, docs):
         pass
     end = time.time()
     print("\t{} docs have been preprocessed in {:.4f} second".format(doc_nums, end - start))
+
+
+def preprocess_for_query(sentence, engine_path):
+    args = parsing_json(os.path.join(engine_path, "args.json"))
+
+    term_list = preprocess_for_text(args, sentence)
+
+    return term_list

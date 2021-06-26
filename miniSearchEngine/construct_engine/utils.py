@@ -1,4 +1,7 @@
-import csv
+import json
+import os
+import time
+from easydict import EasyDict
 
 import pandas as pd
 
@@ -32,12 +35,37 @@ def write_term_dict2disk(term_dict, filename):
     data_frame = pd.DataFrame({'term': term_col, 'doc_feq': doc_feq_col, 'posting_list': posting_list_col})
     data_frame.to_csv(filename, index=False, sep=',')
 
-    return term_dict
 
+def get_engine_from_csv(file_path, name):
+    filename = name + ".csv"
+    file_name = os.path.join(file_path, name + ".csv")
+    if filename not in os.listdir(file_path):
+        raise NameError("No such file : {}.".format(file_name))
 
-def read_from_csv(file_path):
-    if 'df' in file_path:
-        pass
-    df = pd.read_csv(file_path, sep=',')
-    dict_map = dict(zip(df.values[:, 0], df.values[:, 1]))
+    print("\tI'm Loading the {} from {}".format(name, file_name))
+    start = time.time()
+    dict_map = dict()
+    if "dict" in name and "vector_model" not in name:
+        df = pd.read_csv(file_name)
+        for i, term in enumerate(df['term']):
+            dict_map[term] = dict()
+            dict_map[term]['doc_feq'] = df['doc_feq'][i]
+            dict_map[term]['posting_list'] = eval(df['posting_list'][i])
+    if "vector_model" in name:
+        df = pd.read_csv(file_name)
+        for i, term in enumerate(df['term']):
+            dict_map[term] = dict()
+            for j in range(1, len(df.columns)):
+                dict_map[term][j] = df[str(j)][i]
+
+    end = time.time()
+    print("\tSuccessfully load {} in {:.4f} seconds.".format(name, end - start))
     return dict_map
+
+
+def parsing_json(file_path):
+    args_dict = json.load(open(file_path, "rb"))
+    args = EasyDict()
+    for key, value in args_dict.items():
+        args[key] = value
+    return args
