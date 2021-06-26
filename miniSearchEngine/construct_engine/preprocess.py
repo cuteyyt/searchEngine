@@ -52,6 +52,13 @@ def stemming(stemmer, term):
     return stemmer.stem(term)
 
 
+def dot_check(term):
+    check_list = list(term)
+    if check_list[-1] == ".":
+        term = "".join(check_list[:-1])
+    return term
+
+
 def preprocess_for_term(args, term):
     r = segmentation(args.seg)
     stopwords = read_stopwords()
@@ -65,6 +72,8 @@ def preprocess_for_term(args, term):
         an = re.search('^[.]+$', term)
         if an:
             term = ""
+        if term != "":
+            term = dot_check(term)
 
     # FIXME: Complete mode 2
     if args.stop == 1:
