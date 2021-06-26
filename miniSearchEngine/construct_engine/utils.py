@@ -69,3 +69,42 @@ def parsing_json(file_path):
     for key, value in args_dict.items():
         args[key] = value
     return args
+
+
+def display_query_result(data_path, term, pos):
+    """
+
+    :param data_path:
+    :param term:
+    :param pos:
+    :return:
+    """
+    filenames = os.listdir(data_path)
+    filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+    for doc_id, pos_list in pos.items():
+        doc_name = filenames[doc_id]
+        print("{}: {}".format(doc_name, term))
+
+
+def display_query_result_detailed(data_path, term, pos, k=10):
+    """
+
+    :param data_path:
+    :param term:
+    :param pos:
+    :param k: Display k words before and after the sentence
+    :return:
+    """
+    filenames = os.listdir(data_path)
+    filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+    for doc_id, pos_list in pos.items():
+        doc_name = filenames[doc_id]
+        print("{}: {}".format(doc_name, term))
+        print("----------------------------------------------------------")
+        with open(doc_name, "r") as file:
+            content = file.read()
+            raw_term_list = content.split(" ")
+            for pos_id in pos[doc_id]:
+                display_content = " ".join(raw_term_list[pos_id - k:pos_id + k + 1])
+                print(display_content)
+        file.close()

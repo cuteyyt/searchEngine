@@ -3,6 +3,7 @@ from miniSearchEngine.construct_engine.utils import get_engine_from_csv
 from miniSearchEngine.construct_engine.preprocess import preprocess_for_query
 from miniSearchEngine.search_engine.interaction import start
 from miniSearchEngine.search_engine.pretreatment import initialize
+from miniSearchEngine.construct_engine.utils import display_query_result, display_query_result_detailed
 
 if __name__ == '__main__':
     engine_path = "engine/2021_06_26_21_56_17"

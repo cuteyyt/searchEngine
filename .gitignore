@@ -1,7 +1,8 @@
-.idea
+/.idea/
 .git
 /pychche/
 /Reuters/
 /miniSearchEngine.egg-info/
 /engine/
 /venv/
+*/__pycache__
