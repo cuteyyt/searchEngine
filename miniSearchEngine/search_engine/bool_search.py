@@ -1,6 +1,7 @@
 from .spell_correction import correct_bad_words
 from .wildcards_search import get_wildcards_word
 from .output_format import warning_info, error_info, plain_info, highlight_info
+from .pretreatment import get_term_dict
 
 
 BRACKETS_LEFT = "("
@@ -74,12 +75,12 @@ def bool_opt_not(docs1, max_doc_num=100):
     return ret
 
 
-def bool_search(query_list, term_dict, word_correction=True, wildcards_search=True):
+def bool_search(query_list, word_correction=True, wildcards_search=True):
     if len(query_list) == 0:
         error_info("Input can't be empty.")
         return
-
     query_list = query_list.split(' ')
+    term_dict = get_term_dict()
 
     sta = []
 
