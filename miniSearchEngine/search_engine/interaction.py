@@ -112,7 +112,7 @@ def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=
         content = file.read()
         raw_term_list = content.split(" ")
         for pos_id in display_list:
-            display_content = " ".join(raw_term_list[pos_id - sentence_len // 2: pos_id + sentence_len])
+            display_content = " ".join(raw_term_list[pos_id - sentence_len // 2 if pos_id > sentence_len //2 else 0: pos_id + sentence_len])
             print(display_content)
     file.close()
 
@@ -136,7 +136,7 @@ def display_result(query, ret, brief =False):
             index += 1
         else:
             nxt_flag = input("Read more?(y/n)")
-            if nxt_flag != 'y' and nxt_flag !="":
+            if nxt_flag != 'y' and nxt_flag != "":
                 break
 
 
