@@ -1,5 +1,6 @@
 import time
 import pandas
+import os
 
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info, highlight_info
@@ -15,7 +16,8 @@ open_word_correction = ["! open word correction", "! open wc"]
 EXIT_COMMAND = ["! exit"]
 WILDCARDS_STAR = "*"
 
-engine_path = "engine/2021_06_27_19_38_59"
+data_path = "Reuters/"
+engine_path = "engine/2021_06_27_20_31_09"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
@@ -50,7 +52,9 @@ def topk_search_interface(query, word_correction=True, wildcards_search=True):
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    return TopK(query, engine_path + "/term_dict_vector_model.csv"), words
+    ret = TopK(query, engine_path + "/term_dict_vector_model.csv")
+    ret = [int(x) for x in ret]
+    return ret, words
 
 
 def k_nearest_search_interface(query, word_correction, wildcards_search=True):
@@ -71,7 +75,27 @@ def display_document_details(doc, words, sentence_num=5, sentence_len=10):
 
     pos_list.sort()
     print(doc, pos_list)
+    display_list = []
+    sentence_cnt = 0
+    for pos in pos_list:
+        if len(display_list) == 0 or pos - display_list[-1] > sentence_len:
+            display_list.append(pos)
+            sentence_cnt += 1
+            if sentence_cnt >= sentence_num:
+                break
 
+    filenames = os.listdir(data_path)
+    filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+    doc_name = filenames[doc-1]
+    highlight_info(doc_name)
+    plain_info("========================================================")
+    with open(os.path.join(data_path, doc_name), "r") as file:
+        content = file.read()
+        raw_term_list = content.split(" ")
+        for pos_id in display_list:
+            display_content = " ".join(raw_term_list[pos_id - sentence_len // 2: pos_id + sentence_len])
+            print(display_content)
+    file.close()
 
 
 def display_result(query, ret):
@@ -79,8 +103,11 @@ def display_result(query, ret):
         highlight_info("Can't find related documents about your query: " + query)
         return
 
+    success_info(str(len(ret[0])) + "results returned.")
     print(ret[0])
+    print(ret[1])
     for doc in ret[0]:
+
         display_document_details(doc, ret[1])
 
 
