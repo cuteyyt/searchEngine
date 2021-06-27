@@ -1,5 +1,5 @@
 import time
-import pandas
+import pandas as pd
 import os
 
 from .bool_search import bool_search
@@ -59,12 +59,12 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model_path,term_dict,word_correction=True, wildcards_search=True):
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    ret = TopK(query, engine_path + "/term_dict_vector_model.csv")
+    ret = TopK(term_dict,vector_model_path,query)
     ret = [int(x) for x in ret]
     return ret, words
 
@@ -74,7 +74,7 @@ def k_nearest_search_interface(query, word_correction, wildcards_search=True):
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    df = pandas.read_csv(open(engine_path+"/term_dict_with_positional_index.csv"))
+    df = pd.read_csv(open(engine_path+"/term_dict_with_positional_index.csv"))
     return k_nearest_for_query(df, query), words
 
 
@@ -142,6 +142,8 @@ def display_result(query, ret, brief =False):
 
 def start():
     set_dict(engine_path)
+    term_dict=pd.read_csv(engine_path+"/term_dict.csv")
+    vector_model_path=engine_path+"/term_dict_vector_model" 
     word_correction = True
     brief = True
     model_select = 1
