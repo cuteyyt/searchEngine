@@ -31,8 +31,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 100 files for debug.
-        if i >= 10:
-            break
+        # if i >= 10:
+        #     break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
