@@ -53,10 +53,16 @@ def construct_term_dict_with_positional_index(args, raw_doc_dict):
     print("\tI'm creating the term dict with positional index...")
     start = time.time()
     term_dict_with_positional_index = dict()
-
+    count=1
+    print_count=0
+    print_interval=int(len(raw_doc_dict.keys())/20)
     for doc_id in raw_doc_dict.keys():
         content = raw_doc_dict[doc_id]['text']
         raw_term_list = content.split(" ")
+        if count%print_interval==0:
+            print_count+=1    
+            print("\t\t{:d}% work has been done".format(5*print_count))
+        count+=1
         for i, term in enumerate(raw_term_list):
             term = preprocess_for_term(args, term)
             insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
@@ -195,7 +201,7 @@ def construct_vector_model(args, term_dict, doc_dict, filename):
     return vector_model
 
 
-def construct_dict_with_vector_model(args, raw_doc_dict):
+def construct_dict_with_vector_model(args, raw_doc_dict):# 既创建向量空间模型，又创建位置索引
     name = "term dict"
     term_dict_with_positional_index = construct_term_dict_with_positional_index(args, raw_doc_dict)
     construct_term_dict(args, term_dict_with_positional_index, name)
@@ -251,7 +257,7 @@ def construct_engine(args):
         data_path = args.data_path
 
         raw_doc_dict = read_files(data_path)
-        construct_dict_with_vector_model(args, raw_doc_dict)
+        construct_dict_with_vector_model(args, raw_doc_dict)# 既创建向量空间模型，又创建位置索引
 
         end = time.time()
         print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
