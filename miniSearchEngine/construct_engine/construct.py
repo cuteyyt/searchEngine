@@ -162,9 +162,6 @@ def construct_vector_model(args, term_dict, doc_dict, filename, step_nums=1000):
     filename = filename.replace(' ', '_')
     start = time.time()
 
-    tf_matrix = dict()
-    df_matrix = dict()
-    vector_model = dict()
     n = len(doc_dict)
 
     total_term_nums = len(term_dict.keys())
@@ -176,10 +173,13 @@ def construct_vector_model(args, term_dict, doc_dict, filename, step_nums=1000):
             offset = step_nums
         else:
             offset = total_term_nums - step
+        tf_matrix = dict()
+        df_matrix = dict()
+        vector_model = dict()
         for j in tqdm(range(step, step + offset)):
             term = terms[j]
-            tf_matrix[term] = {_ + 1: 0. for _ in range(step, step + offset)}
-            vector_model[term] = {_ + 1: 0. for _ in range(step, step + offset)}
+            tf_matrix[term] = {_ + 1: 0. for _ in range(len(doc_dict))}
+            vector_model[term] = {_ + 1: 0. for _ in range(len(doc_dict))}
             df_matrix[term] = term_dict[term]['doc_feq']
 
             for doc_id in term_dict[term]['posting_list']:
