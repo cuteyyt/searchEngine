@@ -24,7 +24,7 @@ HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
 data_path = "Reuters/"
-engine_path = "engine/2021_06_27_21_20_57"
+engine_path = "engine/2021_06_27_18_22_20"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):

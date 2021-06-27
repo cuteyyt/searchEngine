@@ -53,11 +53,15 @@ def get_wildcards_word(word):
         return
     prefix = ""
     suffix = ""
+    print(word,word[-1])
     if word[0] != '*':
         prefix = word_pieces[0]
+    if word[-1] != '*':
+        suffix = word_pieces[-1]
+
+    if word[0] != '*':
         candidate_words = get_words_by_prefix('$'+word_pieces[0])
     elif word[-1] != '*':
-        suffix = word_pieces[-1]
         candidate_words = get_words_by_prefix(word_pieces[-1]+'$')
     else:
         candidate_words = get_words_by_prefix(word_pieces[0])
