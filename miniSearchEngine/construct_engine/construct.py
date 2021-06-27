@@ -31,8 +31,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 100 files for debug.
-        # if i >= 10:
-        #     break
+        if i >= 100:
+            break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
@@ -203,12 +203,11 @@ def construct_vector_model(args, term_dict, doc_dict, filename, step_nums=1000):
         vm.to_csv(os.path.join(args.engine_path, filename + "_vector_model.csv"), index=False, sep=',', mode='a',
                   header=header)
 
-        row = len(term_dict.keys())
-        col = len(doc_dict.keys())
+    row = len(term_dict.keys())
+    col = len(doc_dict.keys())
 
-        end = time.time()
-        print("\tVector model {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
-        return vector_model
+    end = time.time()
+    print("\tVector model {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
 
 
 def construct_dict_with_vector_model(args, raw_doc_dict):  # 既创建向量空间模型，又创建位置索引
@@ -282,10 +281,6 @@ def construct_engine(args):
 
         if args.compress_doc_id != "none":
             index_compression(args.engine_path, args.compress_doc_id)
-
-        args.tree = 4
-        args.permuterm = True
-        args.gram = 3
 
         if args.tree:
             construct_b_plus_tree(args.engine_path, args.tree)
