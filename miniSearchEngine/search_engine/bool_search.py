@@ -95,7 +95,13 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
         elif word == OPT_NOT:
             sta.append(OPT_NOT)
         else:
-            word = preprocess_for_query(word,engine_path)[0]
+
+            word = preprocess_for_query(word, engine_path)
+            if len(word) == 0:
+                word = "!!!InvalidCharacter!!!"
+            else:
+                word = word[0]
+
             # handle wildcards search
             if wildcards_search and WILDCARDS_STAR in word:
                 candidate_words = get_wildcards_word(word)
