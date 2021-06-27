@@ -88,7 +88,7 @@ def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=
             pos_list = pos_list + pos
 
     pos_list.sort()
-    print(doc, pos_list)
+    # print(doc, pos_list)
     display_list = []
     sentence_cnt = 0
     for pos in pos_list:
@@ -118,10 +118,21 @@ def display_result(query, ret, brief =False):
         return
 
     success_info(str(len(ret[0])) + " results returned.")
-    print(ret[0])
-    print(ret[1])
-    for doc in ret[0]:
-        display_document_details(doc, ret[1], brief=brief)
+    # print(ret[0])
+    # print(ret[1])
+    cnt = 0
+    index = 0
+    while index < len(ret[0]):
+        for cnt in range(0,10):
+            if index >= len(ret[0]):
+                break
+            display_document_details(ret[0][index], ret[1], brief=brief)
+            cnt += 1
+            index += 1
+        else:
+            nxt_flag = input("Read more?(y/n)")
+            if nxt_flag != 'y':
+                break
 
 
 def start():
@@ -165,11 +176,11 @@ def start():
         if query in EXIT_COMMAND:
             break
         query_start = time.time()
-        if model_select == "1":
+        if model_select == 1:
             ret = bool_search_interface(query, word_correction)
-        elif model_select == "2":
+        elif model_select == 2:
             ret = topk_search_interface(query, word_correction)
-        elif model_select == "3":
+        elif model_select == 3:
             ret = k_nearest_search_interface(query,word_correction)
         else:
             ret = bool_search_interface(query, word_correction)

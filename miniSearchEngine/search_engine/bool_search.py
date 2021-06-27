@@ -108,7 +108,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                     term_slice = bool_opt_or(term_slice, list(term_dict[candidate_word]['posting_list'].keys()))
                 sta.append(term_slice)
                 highlight_info("using wildcards search, words matched: " + str(candidate_words))
-                plain_info("docs with these words are: " + str(term_slice))
+                # plain_info("docs with these words are: " + str(term_slice))
                 words = words + candidate_words
             # no wildcards search
             else:
@@ -127,7 +127,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                     term_slice = []
 
                 sta.append(term_slice)
-                plain_info(word + " " + str(term_slice))
+                # plain_info(word + " " + str(term_slice))
 
         while isinstance(sta[-1], list):
             if len(sta) >= 2 and isinstance(sta[-2], list):
