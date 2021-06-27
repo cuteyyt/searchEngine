@@ -53,7 +53,6 @@ def get_wildcards_word(word):
         return
     prefix = ""
     suffix = ""
-    print(word,word[-1])
     if word[0] != '*':
         prefix = word_pieces[0]
     if word[-1] != '*':
