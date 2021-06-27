@@ -1,5 +1,6 @@
+from miniSearchEngine.construct_engine.k_nearest_neighbors import k_nearest_for_query
 import time
-
+import pandas as pd
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info, highlight_info
 from ..construct_engine.utils import display_query_result, display_query_result_detailed
@@ -51,7 +52,11 @@ def topk_search_interface(query, word_correction=True, wildcards_search=True):
 
 
 def k_nearest_search_interface(query, word_correction, wildcards_search=True):
-    return None
+    words = parse_query(query, word_correction, wildcards_search)
+    if len(words) == 0:
+        return None
+    position_term_dict=pd.read_csv("engine/2021_06_27_16_26_07/term_dict_with_positional_index_compressed.csv")
+    return k_nearest_for_query(df=position_term_dict,query=words)
 
 
 def display_result(query, ret):
