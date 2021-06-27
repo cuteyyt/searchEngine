@@ -3,10 +3,9 @@ import pandas
 
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info, highlight_info
-from ..construct_engine.utils import display_query_result, display_query_result_detailed
-from .spell_correction import  correct_bad_words, spell_correction_info
+from .spell_correction import correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
-from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict
+from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict, get_doc_word_position
 from ..construct_engine.topk import TopK
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 
@@ -60,7 +59,19 @@ def k_nearest_search_interface(query, word_correction, wildcards_search=True):
         return None
     query = ' '.join(words)
     df = pandas.read_csv(open(engine_path+"/term_dict_with_positional_index.csv"))
-    return k_nearest_for_query(df,query), words
+    return k_nearest_for_query(df, query), words
+
+
+def display_document_details(doc, words, sentence_num=5, sentence_len=10):
+    pos_list = []
+    for word in words:
+        pos = get_doc_word_position(word, doc)
+        if pos is not None:
+            pos_list = pos_list + pos
+
+    pos_list.sort()
+    print(doc, pos_list)
+
 
 
 def display_result(query, ret):
@@ -69,8 +80,8 @@ def display_result(query, ret):
         return
 
     print(ret[0])
-    # for doc in ret[0]:
-    #     for word in ret[1]:
+    for doc in ret[0]:
+        display_document_details(doc, ret[1])
 
 
 def start():

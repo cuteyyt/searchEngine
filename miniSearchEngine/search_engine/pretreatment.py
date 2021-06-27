@@ -116,6 +116,13 @@ def get_frequency(word):
     return 0
 
 
+def get_doc_word_position(word, doc):
+    if word in pre_term_dict and doc in pre_term_dict[word]['posting_list']:
+        return pre_term_dict[word]['posting_list'][doc]
+    else:
+        return None
+
+
 def get_term_dict():
     return pre_term_dict
 
