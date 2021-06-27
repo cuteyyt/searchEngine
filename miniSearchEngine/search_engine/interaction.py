@@ -55,8 +55,9 @@ def k_nearest_search_interface(query, word_correction, wildcards_search=True):
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
+    query = ' '.join(words)
     position_term_dict=pd.read_csv("engine/2021_06_27_16_26_07/term_dict_with_positional_index_compressed.csv")
-    return k_nearest_for_query(df=position_term_dict,query=words)
+    return k_nearest_for_query(df=position_term_dict,query=query),words
 
 
 def display_result(query, ret):
