@@ -38,5 +38,5 @@ if __name__ == '__main__':
         doc_id_list = TopK(query, query_options["vector_model_path"], query_options["TopK_num"])
 
     doc_id_list = [get_doc_name_from_doc_id("Reuters/", doc_id) for doc_id in doc_id_list]  # 按序号对应文件名
-
-    start()
+    print(doc_id_list)
+    #start()

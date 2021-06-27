@@ -26,7 +26,6 @@ def TopK(query,vector_model_file,k=10):
     df=pd.read_csv(open(vector_model_file))
     term_list=list(df["term"])
     # display(term_list)
-    query="company said"
     query=query.split(" ")
     # print(query)
     query_vector=np.zeros(len(term_list))
