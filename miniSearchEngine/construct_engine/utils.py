@@ -60,7 +60,16 @@ def get_engine_from_csv(file_path, name, mode="vb"):
         print("\tSuccessfully load {} in {:.4f} seconds.".format(name, end - start))
         return restore_dict(file_name, mode)
     if "dict" in name and "vector_model" not in name and "spell" not in name:
-        df = pd.read_csv(file_name)
+        df = pd.read_csv(file_name, iterator=True)
+
+        loop = True
+        chunk_size = 1000
+        while loop:
+            try:
+                chunk = df.get_chunk(chunk_size)
+            except StopIteration:
+                loop = False
+                print("Fuck this!")
         for i, term in enumerate(df['term']):
             term = str(term)
             dict_map[term] = dict()
