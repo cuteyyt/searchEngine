@@ -1,3 +1,43 @@
+import pandas
+
+
+def k_nearest_for_query(df,query,k=5):
+    """
+    参数：查询字符串query
+    返回值：满足query中的每一词项都相邻不超过k的文档列表
+    """
+    # query = query.lower().split(" ")
+    query = query.split(" ")
+    length=len(query)
+    i=0
+    tmp_list=[]
+    while i<length-1: # 获取每邻近的两个单词的k邻近列表
+        tmp_list.append(k_nearest_in_doc(df,query[i],query[i+1]))
+        i+=1
+    # print(tmp_list)
+    length = len(tmp_list)
+    i=0
+    while i<length-1:# 每两个k邻近列表融合
+        l2=tmp_list.pop()
+        l1=tmp_list.pop()
+        tmp_list.append(merge_doc_list(l1,l2,k))
+        i+=1
+    # print(tmp_list)
+    tmp_list=tmp_list[0] # 取出嵌套的列表
+    doc_id_list=[triple[0] for triple in tmp_list] # 取出列表的doc_id
+    return doc_id_list
+
+def merge_doc_list(list1,list2,k):
+    """
+    返回docid同时在list1和list2出现,且list1的第一个词项与list2的第二个词项距离小于k的三元组列表
+    """
+    doclist=[]
+    for item1 in list1:
+        for item2 in list2:
+            if item1[0]==item2[0] and abs(item1[1]-item2[2])<k:
+                doclist.append((item1[0],item1[1],item2[2]))
+    return  doclist
+
 def k_nearest_in_doc(df,term1,term2,k=5):
     """
     df是term_dict_with_positional_index.csv文件转换成的DataFrame结构
@@ -42,3 +82,7 @@ def k_nearest_in_doc(df,term1,term2,k=5):
         elif k1[i1]<k2[i2]:i1+=1
         else : i2+=1     
     return answer
+
+if __name__ == '__main__':
+    df=pandas.read_csv("term_dict_with_positional_index.csv")
+    print(k_nearest_for_query(df,"Vegetable oil registrations",5))

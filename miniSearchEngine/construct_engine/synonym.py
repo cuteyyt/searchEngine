@@ -1,6 +1,10 @@
 from nltk.corpus import wordnet
 import string
 
+def merge_synonyms_list(sym_list):
+    sym_list=[" ".join(sym) for sym in sym_list]
+    return " ".join(sym_list)
+
 def get_synonyms(query, n=5):# 获取查询的同义词，返回值为[[每个词的同义词列表],……]
     punctuations=list(string.punctuation)# 去除标点
     for punctuation in punctuations:
@@ -27,8 +31,7 @@ def get_synonyms(query, n=5):# 获取查询的同义词，返回值为[[每个�
         sym_list=getThesaurus(i, n)
         if sym_list != []:
             result.append(sym_list)
-
-    return result
+    return merge_synonyms_list(result)
 
 def getThesaurus(word, n=5):# 返回值为word的同义词列表
     thesaurus = []
@@ -49,5 +52,6 @@ def getThesaurus(word, n=5):# 返回值为word的同义词列表
 
     if len(thesaurus) > (n+1):
         thesaurus = thesaurus[0:n] # thesaurus[0]即word自身  thesaurus[1:n]是其同义词
-
+    if len(thesaurus)==0:# 没找到同义词
+        thesaurus = [word]
     return thesaurus
