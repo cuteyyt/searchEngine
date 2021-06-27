@@ -1,4 +1,4 @@
-from preprocess import preprocess_for_text
+from .preprocess import preprocess_for_text
 import pandas as pd
 import numpy as np
 
@@ -15,6 +15,7 @@ def Binaryfind(TermList, target):
             start = middle + 1
         else:
             return middle
+
 
 def TopK(query,vector_model_file,k=10):
     """

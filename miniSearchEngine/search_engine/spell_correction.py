@@ -1,4 +1,5 @@
-from .pretreatment import get_spell_correction_dict,get_frequency
+from .pretreatment import get_spell_correction_dict, get_frequency
+from .output_format import highlight_info, plain_info, warning_info
 
 
 def calc_edition_distance(str1, str2):
@@ -46,6 +47,16 @@ def correct_bad_words(bad_word):
             if word_tuple[1] < best_word[1]:
                 best_word = word_tuple
     return best_word[0]
+
+
+def spell_correction_info(word, new_word):
+    highlight_info(word + " can't be recognized. Do you mean '" + new_word + "' ?")
+
+    highlight_info("We have shown you the result of '" + new_word + "'")
+
+    plain_info("If you still want to search '" + word + "', please use such command to close word correction:")
+
+    warning_info('"! close word correction" or "! close wc"')
 
 
 if __name__ == '__main__':

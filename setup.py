@@ -22,6 +22,7 @@ setup(name='miniSearchEngine',
               'add_stopwords = miniSearchEngine.help.edit_stop_words:add',
               'remove_stopwords = miniSearchEngine.help.edit_stop_words:remove',
               'reset_stopwords = miniSearchEngine.help.edit_stop_words:reset',
+              'start_engine = miniSearchEngine.search_engine.interaction:start'
           ],
       },
       keywords=['search engine']
