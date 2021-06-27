@@ -46,7 +46,7 @@ def compress_dict(engine_path, mode):
     new_column = pd.Series(new_dict)
     del df["posting_list"]
     df["posting_list"] = new_column
-    df.to_csv(engine_path.replace(".csv", "_compressed.csv"))
+    df.to_csv(engine_path.replace(".csv", "_compressed.csv"), index=False, sep=',')
     end = time.time()
     print("\t{} has been compressed in {:.4f} seconds.".format(engine_path, end - start))
 

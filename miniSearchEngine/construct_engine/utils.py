@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from tqdm import tqdm
 from easydict import EasyDict
 
 import pandas as pd
@@ -24,11 +25,13 @@ def insert_term2dict(term, _dict, doc_id, pos_id):
 
 
 def write_term_dict2disk(term_dict, filename):
+    print("\tI'm writing {} to disk...".format(filename))
+    start = time.time()
     term_dict = dict(sorted(term_dict.items(), key=lambda x: x[0]))
     term_col = list(term_dict.keys())
     doc_feq_col = list()
     posting_list_col = list()
-    for term in term_dict.keys():
+    for term in tqdm(term_dict.keys()):
         doc_feq_col.append(term_dict[term]['doc_feq'])
         posting_list = dict(sorted(term_dict[term]['posting_list'].items(), key=lambda x: x[0]))
         term_dict[term]['posting_list'] = posting_list
@@ -36,6 +39,11 @@ def write_term_dict2disk(term_dict, filename):
 
     data_frame = pd.DataFrame({'term': term_col, 'doc_feq': doc_feq_col, 'posting_list': posting_list_col})
     data_frame.to_csv(filename, index=False, sep=',')
+
+    end = time.time()
+    print("\tFile {} has been successfully wrote to disk in {:.4f} seconds.".format(filename, end - start))
+
+    return term_dict
 
 
 def get_engine_from_csv(file_path, name, mode="vb"):

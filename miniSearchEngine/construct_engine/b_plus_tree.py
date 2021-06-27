@@ -1,243 +1,324 @@
 import math
-import bisect
+import os
 
 
-def balance(node):
-    if not node.is_root() and node.size() < node.branching_factor // 2:
-        # Borrow from siblings
-        if node.previous is not None and node.previous.size() > node.branching_factor // 2:
-            node.keys.insert(0, node.previous.keys.pop(-1))
-            node.children.insert(0, node.previous.children.pop(-1))
-            node.parent.change_key(node.keys[0], node.keys[0])
-        elif node.next is not None and node.next.size() > node.branching_factor // 2:
-            node.keys.insert(-1, node.next.keys.pop(0))
-            node.children.insert(-1, node.next.children.pop(0))
-            node.next.parent.change_key(node.keys[0], node.next.keys[0])
-        # Merge. Always merge left.
-        elif node.previous is not None:
-            del_key = node.previous.keys[-1]
-            node.previous.keys.extend(node.keys)
-            node.previous.children.extend(node.children)
-            node.parent.remove_child(del_key)
-        elif node.next is not None:
-            del_key = node.keys[-1]
-            node.keys.extend(node.next.keys)
-            node.children.extend(node.next.children)
-            node.parent.remove_child(del_key)
-
-
-class Leaf:
-    def __init__(self, previous_leaf, next_leaf, parent, branching_factor=16):
-        self.previous = previous_leaf
-        self.next = next_leaf
+class Node(object):
+    def __init__(self, parent, degree):
         self.parent = parent
-        self.branching_factor = branching_factor
-        self.keys = []
-        self.children = []  # (key, value)
+        self.degree = degree
+        self.previous_node = None
+        self.next_node = None
+        self.keys = list()
+        self.children = list()
+        self.t = 'node'
 
-    def set(self, key, value):
-        index = bisect.bisect_left(self.keys, key)
-        if index < len(self.keys) and self.keys[index] == key:
-            self.children[index] = value
+    def property(self):
+        return len(self.children) >= int(math.ceil(self.degree / 2))
+
+    def creation_insert(self, key, child1, child2):
+        self.keys.append(key)
+        self.children.append(child1)
+        self.children.append(child2)
+
+    def update_keys(self):
+        if self.children[0].t == 'leaf':
+            if self.property():
+                tmp_list = list()
+                for child in self.children:
+                    tmp_list.append(child.keys[-1])
+                self.keys = tmp_list[: len(self.children) - 1]
+            else:
+                self.bring_down_adjust()
+
+    def insert(self, key, child=None):
+        flag = 0
+        for i in range(len(self.keys)):
+            if self.keys[i] > key:
+                self.keys = self.keys[:i] + [key] + self.keys[i:]
+                if self.children[i].keys[-1] > child.keys[0]:
+                    self.children = self.children[:i] + [child] + self.children[i:]
+                else:
+                    self.children = self.children[:i + 1] + [child] + self.children[i + 1:]
+
+                flag = 1
+                break
+        if flag == 0:
+            self.keys.append(key)
+            self.children.append(child)
+        if len(self.keys) >= self.degree:
+            root = self.balance()
         else:
-            self.keys.insert(index, key)
-            self.children.insert(index, value)
-            if self.size() == self.branching_factor:
-                self.split(math.ceil(self.branching_factor / 2))
+            root = 0
+        if child.t == 'leaf':
+            self.update_keys()
+        return root
 
-    def get(self, key):
-        # TODO: speed up get
-        index = self.keys.index(key)
-        return self.children[index]
-
-    def split(self, index):
-        self.next = Leaf(self, self.next, self.parent, self.branching_factor)
-
-        self.next.keys = self.keys[index:]
-        self.next.children = self.children[index:]
-        self.keys = self.keys[:index]
-        self.children = self.keys[:index]
-        # bubble up
-        if self.is_root():
-            self.parent = Node(None, None, [self.next.keys[0]], [self, self.next],
-                               branching_factor=self.branching_factor)
-            self.next.parent = self.parent
+    def balance(self):
+        index = (self.degree + 1) // 2
+        r = self.keys[index - 1]
+        new_node = Node(self.parent, self.degree)
+        new_node.keys = self.keys[index:]
+        self.keys = self.keys[:index - 1]
+        new_node.children = self.children[index:]
+        for child in new_node.children:
+            child.parent = new_node
+        self.children = self.children[:index]
+        if self.parent is None:
+            node_p = Node(None, self.degree)
+            node_p.creation_insert(r, self, new_node)
+            self.parent = node_p
+            new_node.parent = node_p
+            return node_p
         else:
-            self.parent.add_child(self.next.keys[0], self.next)
-        return self.next
+            root = self.parent.insert(r, new_node)
+            return root
 
-    def remove_item(self, key):
-        del_index = self.keys.index(key)
-        self.keys.pop(del_index)
-        removed_item = self.children.pop(del_index)
-        balance(self)
-        return removed_item
+    def remove_adjust(self):
+        if self.children[0].t == 'leaf':
+            self.update_keys()
+            if self.parent is None:
+                return self.children[0].parent
+        if self.parent.parent is None:
+            return self.parent
+        else:
+            return self.parent.remove_adjust()
 
-    def is_root(self):
-        return self.parent is None
+    def bring_down_adjust(self):
+        if self.parent is None:
+            self.keys = self.children[0].keys
+            self.children = []
+        elif len(self.parent.keys) == 1:
+            if self.parent.children.index(self) == 0:
+                left_node = self.parent.children[1]
+                self.keys.extend(self.parent.keys)
+                self.merge(left_node, 1)
+            else:
+                left_node = self.parent.children[0]
+                left_node.keys.extend(self.parent.keys)
+                self.merge(left_node, -1)
+            for child in self.children:
+                child.parent = self
+            self.update_keys()
+            self.parent = None
+        else:
+            ind = self.parent.children.index(self)
+            if ind < len(self.parent.children) - 1:
+                right_node = self.parent.children[ind + 1]
+                self.keys.extend(self.parent.keys[ind])
+                self.merge(right_node, 1)
+            # print(left_node.keys, "ln keys")
+            else:
+                left_node = self.parent.children[ind - 1]
+                left_node.extend(self.parent.keys[ind])
+                self.merge(left_node, -1)
+            for child in self.children:
+                child.parent = self
+            self.parent.bring_down_adjust()
 
-    def size(self):
-        return len(self.children)
+    def merge(self, node, order):
+        if order == 1:
+            self.keys = self.keys + node.keys
+            self.children[0].next_leaf = node.children[0]
+            node.children[0].previous_leaf = self.children[0]
+            self.children = self.children + node.children
+        else:
+            self.keys = node.keys + self.keys
+            node.children[0].next_leaf = self.children[0]
+            self.children[0].previous_leaf = node.children[0]
+            self.children = node.children + self.children
 
 
-class Node:
-    def __init__(self, previous_node, next_node, keys, children, parent=None, branching_factor=16):
-        self.previous = previous_node
-        self.next = next_node
-        self.keys = keys  # NOTE: must keep keys sorted
-        self.children = children  # NOTE: children must correspond to parents.
+class Leaf(Node):
+    def __init__(self, previous_leaf, next_leaf, parent, degree):
+        super(Leaf, self).__init__(parent, degree)
         self.parent = parent
-        self.branching_factor = branching_factor
-        for child in children:
-            child.parent = self
+        self.degree = degree
+        self.previous_leaf = previous_leaf
+        self.next_leaf = next_leaf
+        self.parent = parent
+        self.degree = degree
+        self.keys = list()
+        self.t = 'leaf'
 
-    def set(self, key, value):
-        i = 0
-        for k in self.keys:
-            if key < k:
-                return
-            i += 1
-        self.children[i + 1].set(key, value)
+    def size(self):
+        return len(self.keys)
+
+    def property(self):
+        return len(self.keys) >= self.degree // 2
 
     def get(self, key):
-        for i, k in enumerate(self.keys):
-            if key < k:
-                return self.children[i].get(key)
-            return self.children[i + 1].get(key)
+        try:
+            index = self.keys.index(key)
+            return index, key
+        except:
+            return -1, key
 
-    def add_child(self, key, greater_child):
-        # children keys must all be greater than key
-        index = bisect.bisect(self.keys, key)
-        self.keys.insert(index, key)
-        self.children.insert(index + 1, greater_child)
-        # Bubble up if too many children
-        if len(self.keys) == self.branching_factor:
-            self.split(self.branching_factor // 2)
-
-    def change_key(self, old_key, new_key):
-        """Replaces the first key that is greater or equal than
-        old_key with new_key or modifies the parent's key so that new_key
-        falls within the current node"""
-        if new_key < self.keys[0]:
-            self.parent.change_key(self.keys[0], new_key)
-        for i, k in enumerate(self.keys):
-            if k >= old_key:
-                self.keys[i] = new_key
-
-    def split(self, index):
-        # Sibling has keys greater than the current
-        self.next = Node(self, self.next, self.keys[index + 1:], self.children[index + 1:], self.parent)
-        split_key = self.keys[index]
-        self.keys = self.keys[:index]
-        self.children = self.children[:index + 1]
-
-        if self.is_root():
-            self.parent = Node(None, None, [split_key], [self, self.next], branching_factor=self.branching_factor)
+    def insert(self, key, child=None):
+        flag = 0
+        for i in range(len(self.keys)):
+            if self.keys[i] > key:
+                self.keys = self.keys[:i] + [key] + self.keys[i:]
+                flag = 1
+                break
+        if flag == 0:
+            self.keys.append(key)
+        if len(self.keys) >= self.degree:
+            # print(self.keys, "keys\n")
+            root = self.balance()
+            return root
         else:
-            self.parent.add_child(split_key, self.next)
-        return self.next
+            return 0
 
-    def remove_item(self, key):
-        """Removes item corresponding to key in the tree.
-        """
-        for i, k in enumerate(self.keys):
-            if k >= key:
-                self.children[i].remove_item(key)
-                return
-        return self.children[-1].remove_item(key)
+    def balance(self):
+        index = (self.degree + 1) // 2
+        r = self.keys[index - 1]
+        print(self.next_leaf)
+        if self.next_leaf == None or len(self.next_leaf.keys) + len(self.keys) - index > self.degree - 1:
+            new_leaf = Leaf(self, None, self.parent, self.degree)
+            self.next_leaf.previous_leaf = new_leaf
 
-    def remove_child(self, key):
-        """Removes first key that is greater that or equal to
-        key and the child to the right of that key.
-        Returns the removed child.
-        """
-        removed_child = None
-        for i, k in enumerate(self.keys):
-            if k >= key:
-                self.keys.pop(i)
-                removed_child = self.children.pop(i + 1)
-                if removed_child.previous is not None:
-                    removed_child.previous.next = removed_child.next
-                if removed_child.next is not None:
-                    removed_child.next.previous = removed_child.previous
-                break
-        balance(self)
-        return removed_child
+            new_leaf.next_leaf = self.next_leaf
+            self.next_leaf = new_leaf
+            new_leaf.keys = self.keys[index:]
+            self.keys = self.keys[:index]
+            if self.parent == None:
+                node_p = Node(None, self.degree)
+                node_p.creation_insert(r, self, new_leaf)
+                self.parent = node_p
+                new_leaf.parent = node_p
+                return node_p
+            else:
+                root = self.parent.insert(r, new_leaf)
+                return root
+        else:
+            next_leaf = self.next_leaf
+            for key in self.keys[index:]:
+                for i in range(len(next_leaf.keys)):
+                    if next_leaf.keys[i] > key:
+                        next_leaf.keys = next_leaf.keys[:i] + [key] + next_leaf.keys[i:]
+                        flag = 1
+                        break
+                if flag == 0:
+                    next_leaf.keys.append(key)
+            self.keys = self.keys[:index]
+            n = self.parent
+            n.update_keys()
+            while n.parent is not None:
+                n = n.parent
+            return n
 
-    def is_root(self):
-        return self.parent is None
+    def merge(self, leaf, order):
+        if order == 1:
+            self.keys = self.keys + leaf.keys
+        else:
+            self.keys = leaf.keys + self.keys
 
-    def size(self):
-        return len(self.children)
+    def remove(self, value):
+        self.keys.remove(value)
+        p = self.parent
+        if not self.property():
+            if self.next_leaf is not None:
+                if self.next_leaf.parent == p:
+                    if len(self.keys) + len(self.next_leaf.keys) <= self.degree - 1:
+                        self.merge(self.next_leaf, 1)
+                        p.children.remove(self.next_leaf)
+                        self.next_leaf = self.next_leaf.next_leaf
+                    elif (len(self.keys) + len(self.next_leaf.keys)) // 2 >= self.degree // 2:
+                        count = 0
+                        while len(self.keys) < self.degree // 2:
+                            self.keys.append(self.next_leaf.keys[count])
+                            count += 1
+                        self.next_leaf.keys = self.next_leaf.keys[count:]
+            elif self.previous_leaf is not None:
+                if self.previous_leaf.parent == p:
+                    if len(self.keys) + len(self.previous_leaf.keys) <= self.degree - 1:
+                        self.merge(self.previous_leaf, -1)
+                        p.children.remove(self.previous_leaf)
+                        self.previous_leaf = self.previous_leaf.previous_leaf
+                        self.previous_leaf.next_leaf = self
+                    elif (len(self.keys) + len(self.previous_leaf.keys)) // 2 >= self.degree // 2:
+                        print(self.previous_leaf.keys)
+                        count = -1
+                        while len(self.keys) < self.degree // 2:
+                            self.keys = [self.previous_leaf.keys[count]] + self.keys
+                            count -= 1
+                        self.previous_leaf.keys = self.previous_leaf.keys[:count + 1]
+                        print(self.previous_leaf.keys)
+        if p.parent is None:
+            p.update_keys()
+            return p
+        else:
+            return p.remove_adjust()
 
 
-class BPlusTree:
-    def __init__(self, branching_factor=16):
-        self.branching_factor = branching_factor
-        self.leaves = Leaf(None, None, None, branching_factor)  # Linked List of leaves
-        self.root = self.leaves
+class BPlusTree(object):
+    def __init__(self, degree):
+        self.degree = degree
+        self.root = Leaf(None, None, None, self.degree)
 
-    def get(self, key):
-        return self.root.get(key)
+    @staticmethod
+    def search(value, node):
+        while node.t != 'leaf':
+            flag = 0
+            for i in range(len(node.keys)):
+                if node.keys[i] >= value:
+                    node = node.children[i]
+                    flag = 1
+                    break
+            if flag == 0 and len(node.children) > len(node.keys):
+                node = node.children[len(node.keys)]
+        print("searching for item {}".format(value), node.keys)
+        try:
+            index = node.keys.index(value)
+            return index, node, 1
+        except:
+            return 0, node, 0
 
-    def __getitem__(self, key):
-        return self.get(key)
+    def insert(self, value):
+        d, leaf, r = self.search(value, self.root)
+        if r == 1:
+            print('{} is already present in the tree'.format(value))
+        else:
+            tmp_list = leaf.insert(value, )
+            print("{} has been successfully added to the tree".format(value))
+            if tmp_list != 0:
+                self.root = tmp_list
 
-    def remove_item(self, key):
-        self.root.remove_item(key)
-        if type(self.root) is Node and len(self.root.children) == 1:
-            self.root = self.root.children[0]
+    def delete(self, value):
+        d, leaf, r = self.search(value, self.root)
+        if r == 1:
+            tmp_list = leaf.remove(value)
+            print("{} has been successfully deleted from the tree".format(value))
+            if tmp_list != 0:
+                self.root = tmp_list
+        else:
+            print('{} is not present in the tree'.format(value))
 
-    def __delitem__(self, key):
-        return self.remove_item(key)
 
-    def set(self, key, value):
-        self.root.set(key, value)
-        if self.root.parent is not None:
-            self.root = self.root.parent
+def write_tree(node, ident, count, file):
+    file.write([ident * count + node.keys + "\n"])
+    count += 1
+    if node.t == 'node':
+        for child in node.children:
+            write_tree(child, ident, count, file)
 
-    def __setitem__(self, key, value):
-        return self.set(key, value)
 
-    def size(self):
-        result = 0
-        leaf = self.leaves
-        while leaf is not None:
-            result += leaf.size()
-            leaf = leaf.next
-        return result
+def write_tree2disk(engine_path, keys, values, order=4):
+    tree = BPlusTree(order)
 
-    def split(self, key):
-        tree = BPlusTree()
-        tree.root = Node(None, None, [], [], self.branching_factor)
+    tree_folder = os.path.join(engine_path, "{}_b_plus_tree".format(order))
+    os.makedirs(tree_folder, exist_ok=True)
 
-        current_node = self.root
-        new_node = tree.root
-        while type(current_node) is Node or type(current_node) is Leaf:
-            child_type = type(current_node.children[0])
-            split_index = bisect.bisect_left(current_node.keys, key)
-            new_node.keys = current_node.keys[:split_index]
-            new_node.children = current_node.children[:split_index]
-            current_node.keys = current_node.keys[split_index:]
-            current_node.children = current_node.children[split_index:]
-            if len(current_node.children) == 0:
-                break
-            # Add new ambiguous node on the split and fix pointers
-            if child_type is Node:
-                new_node.children.append(Node(new_node.children[-1], None, [], [],
-                                              parent=new_node,
-                                              branching_factor=new_node.branching_factor))
-                new_node.children[-2].next = new_node.children[-1]
-                current_node.children[0].previous = None
-            elif child_type is Leaf:
-                new_node.children.append(Leaf(new_node.children[-1], None, new_node,
-                                              branching_factor=new_node.branching_factor))
-                new_node.children[-2].next = new_node.children[-1]
-                current_node.children[0].previous = None
-            # Balance trees
-            new_node.balance()
-            current_node.balance()
-            current_node = current_node.children[0]
-            new_node = new_node.children[-1]
+    file_content = list()
 
-        return tree
+    for key, value in zip(keys, values):
+        file_content.append(key + " " + value + "\n")
+        tree.insert(key)
+
+    with open(os.path.join(tree_folder, "node_index.txt"), "w")as file:
+        file.writelines(file_content)
+    file.close()
+
+    with open(os.path.join(tree_folder, "tree.txt"), "w") as file:
+        write_tree(tree.root, ' ', 0, file)
+    file.close()
