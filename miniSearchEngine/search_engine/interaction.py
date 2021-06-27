@@ -11,9 +11,15 @@ from ..construct_engine.topk import TopK
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 
 
-close_word_correction = ["! close word correction", "! close wc"]
-open_word_correction = ["! open word correction", "! open wc"]
-EXIT_COMMAND = ["! exit"]
+close_word_correction = ["! close word correction", "! close wc", "! cwc"]
+open_word_correction = ["! open word correction", "! open wc" , "! owc"]
+EXIT_COMMAND = ["! exit", "! e"]
+BRIEF_MODE = ["! brief", "! b"]
+DETAIL_MODE = ["! detail", "! d"]
+SWITCH_MODE_1 = ["! switch bool search mode", "! s1" ,"! switch 1"]
+SWITCH_MODE_2 = ["! switch topk mode", "! s2" ,"! switch 2"]
+SWITCH_MODE_3 = ["! switch k nearest search mode", "! s3" ,"! switch 3"]
+HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
 data_path = "Reuters/"
@@ -66,7 +72,14 @@ def k_nearest_search_interface(query, word_correction, wildcards_search=True):
     return k_nearest_for_query(df, query), words
 
 
-def display_document_details(doc, words, sentence_num=5, sentence_len=10):
+def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=False):
+    if brief:
+        filenames = os.listdir(data_path)
+        filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+        doc_name = filenames[doc - 1]
+        highlight_info(doc_name)
+        return
+
     pos_list = []
     for word in words:
         pos = get_doc_word_position(word, doc)
@@ -98,24 +111,24 @@ def display_document_details(doc, words, sentence_num=5, sentence_len=10):
     file.close()
 
 
-def display_result(query, ret):
+def display_result(query, ret, brief =False):
     if len(ret[0]) == 0:
         highlight_info("Can't find related documents about your query: " + query)
         return
 
-    success_info(str(len(ret[0])) + "results returned.")
+    success_info(str(len(ret[0])) + " results returned.")
     print(ret[0])
     print(ret[1])
     for doc in ret[0]:
-
-        display_document_details(doc, ret[1])
+        display_document_details(doc, ret[1], brief=brief)
 
 
 def start():
     set_dict(engine_path)
     word_correction = True
+    brief = True
+    model_select = 1
     while True:
-        model_select = input("select search method(1.bool search | 2.topk search | 3.k_nearest search):\n")
         query = input("come on, baby: ")
         if query in close_word_correction:
             word_correction = False
@@ -124,6 +137,29 @@ def start():
         if query in open_word_correction:
             word_correction = True
             success_info("Open word correction.")
+            continue
+        if query in BRIEF_MODE:
+            brief = True
+            success_info("Brief mode.")
+            continue
+        if query in DETAIL_MODE:
+            brief = False
+            success_info("Detail mode.")
+            continue
+        if query in SWITCH_MODE_1:
+            model_select = 1
+            success_info("You are using bool search.")
+            continue
+        if query in SWITCH_MODE_2:
+            model_select = 2
+            success_info("You are using top k search.")
+            continue
+        if query in SWITCH_MODE_3:
+            model_select = 3
+            success_info("You are using k nearest search.")
+            continue
+        if query in HELP:
+            print("You can read Readme.md.")
             continue
         if query in EXIT_COMMAND:
             break
@@ -141,7 +177,7 @@ def start():
         if ret is None:
             warning_info("Please input your query in format!")
         else:
-            display_result(query, ret)
+            display_result(query, ret, brief=brief)
 
     success_info("Bye~")
 
