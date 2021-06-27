@@ -19,16 +19,7 @@ def segmentation(mode):
     return r
 
 
-def read_stopwords(path="miniSearchEngine/help/stopword_en.txt"):
-    stopwords = list()
-    with open(path, 'r', encoding='utf8') as f:
-        word = f.readline()
-        while word:
-            stopwords.append(word.replace('\n', ''))
-            word = f.readline()
-    f.close()
-
-    # FIXME: May add this later
+def read_stopwords():
     stopwords = set(nltk_stopwords.words("english"))
     # print(stopwords)
     return stopwords

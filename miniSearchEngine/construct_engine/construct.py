@@ -13,6 +13,7 @@ from nltk import pos_tag
 from .utils import insert_term2dict, write_term_dict2disk
 from .preprocess import preprocess_for_term
 from .index_compression import index_compression
+from .postprocess import construct_b_plus_tree, construct_permuterm_index, construct_gram_index
 
 
 def read_files(data_path="Reuters"):
@@ -28,10 +29,11 @@ def read_files(data_path="Reuters"):
         raise ValueError("No file in directory {}".format(data_path))
     filenames = os.listdir(data_path)
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
-    for i, filename in tqdm(enumerate(filenames)):
+    for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 100 files for debug.
-        if i >= 100:
+        if i >= 10:
             break
+        filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
             doc_dict[i + 1] = dict()
@@ -60,8 +62,9 @@ def construct_term_dict_with_positional_index(args, raw_doc_dict):
             term = preprocess_for_term(args, term)
             insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
 
-    write_term_dict2disk(term_dict_with_positional_index,
-                         os.path.join(args.engine_path, "term_dict_with_positional_index.csv"))
+    term_dict_with_positional_index = write_term_dict2disk(term_dict_with_positional_index,
+                                                           os.path.join(args.engine_path,
+                                                                        "term_dict_with_positional_index.csv"))
 
     end = time.time()
     print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(term_dict_with_positional_index),
@@ -87,8 +90,9 @@ def construct_biword_dict_with_positional_index(args, raw_doc_dict):
             bi_term = term + " " + term_next
             insert_term2dict(bi_term, biword_dict_with_positional_index, doc_id, i)
 
-    write_term_dict2disk(biword_dict_with_positional_index, os.path.join(args.engine_path,
-                                                                         "biword_dict_with_positional_index.csv"))
+    biword_dict_with_positional_index = write_term_dict2disk(biword_dict_with_positional_index,
+                                                             os.path.join(args.engine_path,
+                                                                          "biword_dict_with_positional_index.csv"))
 
     end = time.time()
     print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(len(biword_dict_with_positional_index),
@@ -127,8 +131,10 @@ def construct_extended_biword_dict_with_positional_index(args, raw_doc_dict):
                     break
                 pointer += 1
             pointer += 1
-    write_term_dict2disk(extended_biword_dict_with_positional_index,
-                         os.path.join(args.engine_path, "extended_biword_dict_with_positional_index.csv"))
+    extended_biword_dict_with_positional_index = \
+        write_term_dict2disk(extended_biword_dict_with_positional_index,
+                             os.path.join(args.engine_path,
+                                          "extended_biword_dict_with_positional_index.csv"))
 
     end = time.time()
     print("\tDict with {:d} terms has been created in {:.4f} seconds!".format(
@@ -141,7 +147,7 @@ def construct_term_dict(args, term_dict, filename):
     start = time.time()
 
     term_dict = deepcopy(term_dict)
-    for term in term_dict.keys():
+    for term in tqdm(term_dict.keys()):
         for doc_id in term_dict[term]['posting_list'].keys():
             term_dict[term]['posting_list'][doc_id] = list()
     end = time.time()
@@ -151,7 +157,7 @@ def construct_term_dict(args, term_dict, filename):
     return term_dict
 
 
-def construct_vector_model(args, term_dict, doc_dict, filename):
+def construct_vector_model(args, term_dict, doc_dict, filename, step_nums=1000):
     print("\tI'm creating the vector model for {}...".format(filename))
     filename = filename.replace(' ', '_')
     start = time.time()
@@ -161,54 +167,65 @@ def construct_vector_model(args, term_dict, doc_dict, filename):
     vector_model = dict()
     n = len(doc_dict)
 
-    for term in term_dict.keys():
-        tf_matrix[term] = dict()
-        vector_model[term] = dict()
-        df_matrix[term] = term_dict[term]['doc_feq']
+    total_term_nums = len(term_dict.keys())
+    step_nums = step_nums
+    terms = list(term_dict.keys())
 
-        for doc_id in doc_dict.keys():
-            if doc_id not in term_dict[term]['posting_list'].keys():
-                tf_matrix[term][doc_id] = 0.
-                vector_model[term][doc_id] = 0.
-            else:
+    for step in tqdm(range(0, total_term_nums, step_nums)):
+        if step + step_nums <= total_term_nums:
+            offset = step_nums
+        else:
+            offset = total_term_nums - step
+        for j in tqdm(range(step, step + offset)):
+            term = terms[j]
+            tf_matrix[term] = {_ + 1: 0. for _ in range(step, step + offset)}
+            vector_model[term] = {_ + 1: 0. for _ in range(step, step + offset)}
+            df_matrix[term] = term_dict[term]['doc_feq']
+
+            for doc_id in term_dict[term]['posting_list']:
                 tf_matrix[term][doc_id] = len(term_dict[term]['posting_list'][doc_id])
                 vector_model[term][doc_id] = (1. + math.log10(tf_matrix[term][doc_id])) * math.log10(
                     n / df_matrix[term])
 
-    vm_dict = {'term': list(vector_model.keys())}
+        vm_dict = {'term': list(vector_model.keys())}
 
-    for doc_id in doc_dict.keys():
-        vm_dict[doc_id] = list()
-        for term in vector_model.keys():
-            vm_dict[doc_id].append(vector_model[term][doc_id])
+        for doc_id in doc_dict.keys():
+            vm_dict[doc_id] = list()
+            for term in vector_model.keys():
+                vm_dict[doc_id].append(vector_model[term][doc_id])
 
-    vm = pd.DataFrame(vm_dict)
+        vm = pd.DataFrame(vm_dict)
 
-    vm.to_csv(os.path.join(args.engine_path, filename + "_vector_model.csv"), index=False, sep=',')
+        if step == 0:
+            header = True
+        else:
+            header = False
+        vm.to_csv(os.path.join(args.engine_path, filename + "_vector_model.csv"), index=False, sep=',', mode='a',
+                  header=header)
 
-    row = len(vm_dict[1])
-    col = len(vm.columns) - 1
+        row = len(term_dict.keys())
+        col = len(doc_dict.keys())
 
-    end = time.time()
-    print("\tVector model {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
-    return vector_model
+        end = time.time()
+        print("\tVector model {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
+        return vector_model
 
 
 def construct_dict_with_vector_model(args, raw_doc_dict):  # 既创建向量空间模型，又创建位置索引
     name = "term dict"
     term_dict_with_positional_index = construct_term_dict_with_positional_index(args, raw_doc_dict)
     construct_term_dict(args, term_dict_with_positional_index, name)
-    construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+    construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
     if args.biword:
         name = "biword dict"
         term_dict_with_positional_index = construct_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
     if args.extended_biword:
         name = "extend biword dict"
         term_dict_with_positional_index = construct_extended_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name)
+        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
 
 
 def construct_engine(args):
@@ -241,8 +258,9 @@ def construct_engine(args):
                                 term_dict[term]['posting_list'][i + 1] = None
             file.close()
         end = time.time()
-        print("I have done the task \"construct search engine\" with {} files in {:.4f} seconds.".format(len(filenames),
-                                                                                                         end - start))
+        print("I have done the task \"construct search engine\" with {} files in {:.4f} seconds.".format(
+            len(filenames),
+            end - start))
         exit(0)
     else:
         data_path = args.data_path
@@ -265,6 +283,17 @@ def construct_engine(args):
         if args.compress_doc_id != "none":
             index_compression(args.engine_path, args.compress_doc_id)
 
+        args.tree = 4
+        args.permuterm = True
+        args.gram = 3
+
+        if args.tree:
+            construct_b_plus_tree(args.engine_path, args.tree)
+        if args.permuterm:
+            construct_permuterm_index(args.engine_path)
+        if args.gram:
+            construct_gram_index(args.engine_path, args.gram)
+
 
 def check_parameter_integrity(args):
     # Check each single arg
@@ -280,14 +309,17 @@ def check_parameter_integrity(args):
             "Although tree order larger than 5 is theoretically allowed, "
             "the construction process will fail if the space or time reaches limit."
             "use command \"construct_engine -h\" to see more details.".format(args.tree))
-    if args.gram <= 1 and args.gram != 0:
-        raise ValueError("--gram must be given a positive integer or 0, "
+    if 3 < args.tree <= 5:
+        args.tree = 0
+        print("We don't use this for its complexity and inconvenience.")
+
+    if args.gram < 0:
+        raise ValueError("--gram must be given a non-negative integer, "
                          "use command \"construct_engine -h\" to see more details.".format(args.gram))
-    if args.gram >= 5:
-        raise ValueError(
-            "Although k-gram with k larger than 5 is theoretically allowed, "
-            "the construction process will fail if the space or time reaches limit."
-            "use command \"construct_engine -h\" to see more details.".format(args.gram))
+    if args.gram > 0:
+        args.gram = 0
+        print("We don't use this for its huge memory occupation.")
+
     if args.compress_doc_id not in ['none', 'vb', 'gamma']:
         raise ValueError("Unsupported compress/encode doc id mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_doc_id))
@@ -335,27 +367,32 @@ def main():
                              "Use NLTK's PorterStemmer.")
 
     # index specification
-    parser.add_argument("--biword", "--biword_index", type=bool, default=False,
+    parser.add_argument("--biword", "--biword_index", type=bool, default=True,
                         help="Whether to create biword indexes.")
-    parser.add_argument("--extended_biword", type=bool, default=False,
+    parser.add_argument("--extended_biword", type=bool, default=True,
                         help="Whether to use extended biword.")
 
-    # Faster term search
-    parser.add_argument("--tree", "--B_plus_tree", type=int, default=0,
+    # Faster term search/Complex index
+    parser.add_argument("--tree", "--B_plus_tree", type=int, default=4,
                         help="Whether to create a B+ tree for the term."
                              "0 stands for NOT and other POSITIVE INTEGER stands for the B+ tree's order.")
-    parser.add_argument("--permuterm", "--perm", type=bool, default=False,
+    parser.add_argument("--permuterm", "--perm", type=bool, default=True,
                         help="Whether to create a permuterm index.")
-    parser.add_argument("--gram", type=int, default=0,
+    parser.add_argument("--gram", type=int, default=3,
                         help="Whether to create a K-gram index."
                              "0 stands for NOT and other POSITIVE INTEGER stands for the K value_.")
 
     # index compression (as postprocess)
-    parser.add_argument("--compress_doc_id", type=str, default="gamma",
+    parser.add_argument("--compress_doc_id", type=str, default="vb",
                         help="Whether to compress doc id."
                              "none: keep original form."
                              "vb: use vb encoding."
                              "gamma: use gamma encoding.")
+
+    # Others
+    parser.add_argument("--step_nums", type=int, default=1000,
+                        help="The term number of one iteration when creating vector model."
+                             "Suggested is any integer between [1000, 5000].")
 
     args = parser.parse_args()
 
