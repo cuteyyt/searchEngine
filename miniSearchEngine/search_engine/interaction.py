@@ -9,6 +9,7 @@ from .wildcards_search import get_wildcards_word
 from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict, get_doc_word_position
 from ..construct_engine.topk import TopK
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
+from ..construct_engine.preprocess import preprocess_for_query
 
 
 close_word_correction = ["! close word correction", "! close wc", "! cwc"]
@@ -23,7 +24,7 @@ HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
 data_path = "Reuters/"
-engine_path = "engine/2021_06_27_20_31_09"
+engine_path = "engine/2021_06_27_21_20_57"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
@@ -31,7 +32,7 @@ def bool_search_interface(query, word_correction, wildcards_search=True):
 
 
 def parse_query(query, word_correction=True, wildcards_search=True):
-    query_list = query.split(' ')
+    query_list = preprocess_for_query(query, engine_path)
     term_dict = get_term_dict()
     words = []
     for word in query_list:

@@ -2,7 +2,8 @@ from .spell_correction import correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
 from .output_format import warning_info, error_info, plain_info, highlight_info
 from .pretreatment import get_term_dict
-
+from ..construct_engine.preprocess import preprocess_for_query
+engine_path = "engine/2021_06_27_21_20_57"
 
 BRACKETS_LEFT = "("
 BRACKETS_RIGHT = ")"
@@ -94,6 +95,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
         elif word == OPT_NOT:
             sta.append(OPT_NOT)
         else:
+            word = preprocess_for_query(word,engine_path)[0]
             # handle wildcards search
             if wildcards_search and WILDCARDS_STAR in word:
                 candidate_words = get_wildcards_word(word)
