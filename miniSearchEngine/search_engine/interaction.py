@@ -32,7 +32,7 @@ def bool_search_interface(query, word_correction, wildcards_search=True):
 
 
 def parse_query(query, word_correction=True, wildcards_search=True):
-    query_list = preprocess_for_query(query, engine_path)
+    query_list = query.split(" ")
     term_dict = get_term_dict()
     words = []
     for word in query_list:
@@ -44,6 +44,11 @@ def parse_query(query, word_correction=True, wildcards_search=True):
             highlight_info("using wildcards search, words matched: " + str(candidate_words))
             words = words + candidate_words
         else:
+            word = preprocess_for_query(word, engine_path)
+            if len(word) == 0:
+                word = "!!!InvalidCharacter!!!"
+            else:
+                word = word[0]
             if word_correction and word not in term_dict:
                 new_word = correct_bad_words(word)
                 if new_word != "":
@@ -131,7 +136,7 @@ def display_result(query, ret, brief =False):
             index += 1
         else:
             nxt_flag = input("Read more?(y/n)")
-            if nxt_flag != 'y':
+            if nxt_flag != 'y' and nxt_flag !="":
                 break
 
 
