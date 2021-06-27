@@ -14,6 +14,7 @@ setup(name='miniSearchEngine',
           "nltk",
           "jieba",
           "easydict",
+          "tqdm",
       ],
       entry_points={
           'console_scripts': [

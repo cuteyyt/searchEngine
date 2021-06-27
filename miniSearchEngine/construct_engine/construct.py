@@ -4,6 +4,7 @@ import math
 import json
 import argparse
 import pandas as pd
+from tqdm import tqdm
 
 from copy import deepcopy
 
@@ -27,7 +28,7 @@ def read_files(data_path="Reuters"):
         raise ValueError("No file in directory {}".format(data_path))
     filenames = os.listdir(data_path)
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
-    for i, filename in enumerate(filenames):
+    for i, filename in tqdm(enumerate(filenames)):
         # FIXME: Choose first 100 files for debug.
         if i >= 100:
             break
@@ -52,16 +53,9 @@ def construct_term_dict_with_positional_index(args, raw_doc_dict):
     print("\tI'm creating the term dict with positional index...")
     start = time.time()
     term_dict_with_positional_index = dict()
-    count=1
-    print_count=0
-    print_interval=int(len(raw_doc_dict.keys())/20)
-    for doc_id in raw_doc_dict.keys():
+    for doc_id in tqdm(raw_doc_dict.keys()):
         content = raw_doc_dict[doc_id]['text']
         raw_term_list = content.split(" ")
-        if count%print_interval==0:
-            print_count+=1    
-            print("\t\t{:d}% work has been done".format(5*print_count))
-        count+=1
         for i, term in enumerate(raw_term_list):
             term = preprocess_for_term(args, term)
             insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
@@ -80,7 +74,7 @@ def construct_biword_dict_with_positional_index(args, raw_doc_dict):
     start = time.time()
     biword_dict_with_positional_index = dict()
 
-    for doc_id in raw_doc_dict.keys():
+    for doc_id in tqdm(raw_doc_dict.keys()):
         content = raw_doc_dict[doc_id]['text']
         raw_term_list = content.split(" ")
         for i in range(len(raw_term_list) - 1):
@@ -109,7 +103,7 @@ def construct_extended_biword_dict_with_positional_index(args, raw_doc_dict):
 
     noun = ['NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$']
     x = ['CC', 'DT', 'IN', 'PDT', 'POS']
-    for doc_id in raw_doc_dict.keys():
+    for doc_id in tqdm(raw_doc_dict.keys()):
         content = raw_doc_dict[doc_id]['text']
         raw_term_list = content.split(" ")
 
@@ -200,7 +194,7 @@ def construct_vector_model(args, term_dict, doc_dict, filename):
     return vector_model
 
 
-def construct_dict_with_vector_model(args, raw_doc_dict):# 既创建向量空间模型，又创建位置索引
+def construct_dict_with_vector_model(args, raw_doc_dict):  # 既创建向量空间模型，又创建位置索引
     name = "term dict"
     term_dict_with_positional_index = construct_term_dict_with_positional_index(args, raw_doc_dict)
     construct_term_dict(args, term_dict_with_positional_index, name)
@@ -254,7 +248,7 @@ def construct_engine(args):
         data_path = args.data_path
 
         raw_doc_dict = read_files(data_path)
-        construct_dict_with_vector_model(args, raw_doc_dict)# 既创建向量空间模型，又创建位置索引
+        construct_dict_with_vector_model(args, raw_doc_dict)  # 既创建向量空间模型，又创建位置索引
 
         end = time.time()
         print("I have done the task \"construct search engine\" in {:.4f} seconds.".format(end - start))
@@ -277,9 +271,7 @@ def check_parameter_integrity(args):
     if args.seg not in [0, 1, 2, 3]:
         raise ValueError("Unsupported segmentation mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.seg))
-    if args.stop not in [0, 1, 2]:
-        raise ValueError("Unsupported stopwords mode {}, "
-                         "use command \"construct_engine -h\" to see more details.".format(args.stop))
+
     if args.tree <= 2 and args.tree != 0:
         raise ValueError("--tree/--B_plus_tree must be given a positive integer larger than 2 or 0, "
                          "use command \"construct_engine -h\" to see more details.".format(args.tree))
@@ -299,20 +291,6 @@ def check_parameter_integrity(args):
     if args.compress_doc_id not in ['none', 'vb', 'gamma']:
         raise ValueError("Unsupported compress/encode doc id mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_doc_id))
-
-    # Check arg relationships
-    if not args.pos:
-        print("Note: positional index will be created anyway for tf calculate and result display."
-              "However, set this FALSE means we will refer to the dict without positional index "
-              "and may have a faster query speed.")
-    if (not args.biword) and (not args.pos) and (not args.extended_biword):
-        print("Warning: please set at least one of the "
-              "[\'--biword\',\'--pos\',\'extended_biword\'] TRUE to enable phrase query.")
-
-    if (not args.permuterm) and (not args.gram) and (not args.tree):
-        print(
-            "Warning: please set at least one of the "
-            "[\'--permuterm\',\'--gram\',\'--tree\'] TRUE to enable 'mon*' like query.")
 
     args.engine_path = os.path.join(args.engine_path, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()))
     os.makedirs(args.engine_path, exist_ok=True)
@@ -339,15 +317,13 @@ def main():
     parser.add_argument("--store_preprocessed", "--store", type=bool, default=False,
                         help="Whether to store preprocessed data files, default is TRUE.")
     parser.add_argument("--seg", "--segmentation", type=int, default=1,
-                        help="0: Split by SPACES and PUNCTUATIONS. This will treat [-./] as separate words."
+                        help="0: Split by SPACES ONLY."
                              "1: Except [a-zA-Z0-9.-/], all other characters will be replaced by BLANK."
                              "2: Split by default NLTK API."
                              "3: Split by default JIEBA API."
                              "default is 1.")
-    parser.add_argument("--stop", "--stopwords", type=int, default=0,
-                        help="Whether to remove stop words, default is FALSE."
-                             "1: Use user editable stopwords"
-                             "2: Use stopwords from NLTK")
+    parser.add_argument("--stop", "--stopwords", type=bool, default=False,
+                        help="Whether to remove stop words, default is FALSE.")
     parser.add_argument("--norm", "--normalization", type=bool, default=False,
                         help="Whether to use token normalization, default is FALSE."
                              "Convert UPPER to LOWER only.")
@@ -359,11 +335,9 @@ def main():
                              "Use NLTK's PorterStemmer.")
 
     # index specification
-    parser.add_argument("--biword", "--biword_index", type=bool, default=True,
+    parser.add_argument("--biword", "--biword_index", type=bool, default=False,
                         help="Whether to create biword indexes.")
-    parser.add_argument("--pos", "--positional_index", type=bool, default=True,
-                        help="Whether to create positional indexes.")
-    parser.add_argument("--extended_biword", type=bool, default=True,
+    parser.add_argument("--extended_biword", type=bool, default=False,
                         help="Whether to use extended biword.")
 
     # Faster term search
@@ -377,7 +351,7 @@ def main():
                              "0 stands for NOT and other POSITIVE INTEGER stands for the K value_.")
 
     # index compression (as postprocess)
-    parser.add_argument("--compress_doc_id", type=str, default="vb",
+    parser.add_argument("--compress_doc_id", type=str, default="gamma",
                         help="Whether to compress doc id."
                              "none: keep original form."
                              "vb: use vb encoding."

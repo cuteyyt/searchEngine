@@ -33,7 +33,7 @@ def vb_decoding(encoded):
 def gamma_encoding(ori):
     offset = bin(ori)[3:]
     length = ''.join(['1' for _ in range(len(offset))]) + '0'
-    print(length + offset)
+    return length + offset
 
 
 def gamma_decoding(encoded):

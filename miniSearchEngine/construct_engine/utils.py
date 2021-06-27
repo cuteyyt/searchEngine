@@ -48,22 +48,27 @@ def get_engine_from_csv(file_path, name, mode="vb"):
     start = time.time()
     dict_map = dict()
     if "compressed" in name:
+        end = time.time()
+        print("\tSuccessfully load {} in {:.4f} seconds.".format(name, end - start))
         return restore_dict(file_name, mode)
     if "dict" in name and "vector_model" not in name and "spell" not in name:
         df = pd.read_csv(file_name)
         for i, term in enumerate(df['term']):
+            term = str(term)
             dict_map[term] = dict()
             dict_map[term]['doc_feq'] = df['doc_feq'][i]
             dict_map[term]['posting_list'] = eval(df['posting_list'][i])
     if "vector_model" in name:
         df = pd.read_csv(file_name)
         for i, term in enumerate(df['term']):
+            term = str(term)
             dict_map[term] = dict()
             for j in range(1, len(df.columns)):
                 dict_map[term][j] = df[str(j)][i]
     if "spell" in name or "rotation" in name:
         df = pd.read_csv(file_name)
         for i, key in enumerate(df['key']):
+            key = str(key)
             dict_map[key] = eval(df['value'][i])
 
     end = time.time()

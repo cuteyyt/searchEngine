@@ -56,6 +56,7 @@ def restore_dict(engine_path, mode):
 
     term_dict = dict()
     for i, term in enumerate(df['term']):
+        term = str(term)
         term_dict[term] = dict()
         term_dict[term]['doc_feq'] = df['doc_feq'][i]
         posting_list = eval(df['posting_list'][i])
@@ -63,9 +64,9 @@ def restore_dict(engine_path, mode):
         last_key = 0
         for j in range(0, len(posting_list), 2):
             if mode == "vb":
-                key = vb_decoding(posting_list[j])
+                offset = vb_decoding(posting_list[j])
             else:
-                key = gamma_decoding(posting_list[j])
-            term_dict[term]['posting_list'][key + last_key] = posting_list[j + 1]
-            last_key = key
+                offset = gamma_decoding(posting_list[j])
+            term_dict[term]['posting_list'][offset + last_key] = posting_list[j + 1]
+            last_key += offset
     return term_dict

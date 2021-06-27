@@ -10,6 +10,4 @@ if __name__ == '__main__':
     # engine_path = "engine/2021_06_26_21_56_17"
     engine_path = main()
 
-    term_dict = get_engine_from_csv(engine_path, "term_dict")
-    term_dict_ = get_engine_from_csv(engine_path, "term_dict_compressed", "vb")
-    print(term_dict == term_dict_)
+    start()

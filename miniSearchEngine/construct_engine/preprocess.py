@@ -13,9 +13,9 @@ def segmentation(mode):
     # FIXME: Complete mode 0, 2, 3
     r = None
     if mode == 0:
-        r = r"[\n,'\"]+"
+        r = r"[\n]+"
     elif mode == 1:
-        r = r"[^a-zA-Z0-9.]+"
+        r = r"[^a-zA-Z0-9.-/]+"
     return r
 
 
@@ -78,12 +78,9 @@ def preprocess_for_term(args, term):
         if term != "":
             term = dot_check(term)
 
-    # FIXME: Complete mode 2
-    if args.stop == 1:
+    if args.stop:
         if is_stopword(term, stopwords):
             term = ""
-    elif args.stop == 2:
-        pass
 
     if args.norm:
         term = normalization(term)
