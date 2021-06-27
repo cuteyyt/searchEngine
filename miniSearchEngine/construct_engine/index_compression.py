@@ -4,7 +4,6 @@ import time
 import pandas as pd
 
 from .encoding_decoding import vb_encoding, vb_decoding, gamma_encoding, gamma_decoding
-from .utils import write_term_dict2disk
 
 
 def index_compression(engine_path, mode):
@@ -61,10 +60,12 @@ def restore_dict(engine_path, mode):
         term_dict[term]['doc_feq'] = df['doc_feq'][i]
         posting_list = eval(df['posting_list'][i])
         term_dict[term]['posting_list'] = dict()
+        last_key = 0
         for j in range(0, len(posting_list), 2):
             if mode == "vb":
-                term_dict[term]['posting_list'][vb_decoding(posting_list[j])] = posting_list[j + 1]
+                key = vb_decoding(posting_list[j])
             else:
-                term_dict[term]['posting_list'][gamma_decoding(posting_list[j])] = posting_list[j + 1]
-
+                key = gamma_decoding(posting_list[j])
+            term_dict[term]['posting_list'][key + last_key] = posting_list[j + 1]
+            last_key = key
     return term_dict
