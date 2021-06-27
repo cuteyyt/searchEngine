@@ -91,6 +91,7 @@ def NewTopK(term_dict,vector_model,query,k=10):
     sim_dict={}# 每个doc对应的的余弦相似度
     i=1
     for doc_vector in doc_vectors:
+        doc_vector=eval(doc_vector)
         fenzi=0
         doc_vector_norm=0# 文档向量的模
         for x in doc_vector:# x[0]是词项索引，x[1]是tf-idf
