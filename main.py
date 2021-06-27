@@ -12,11 +12,10 @@ from miniSearchEngine.construct_engine.utils import get_doc_name_from_doc_id
 import pandas as pd
 
 if __name__ == '__main__':
-    # engine_path = "engine/2021_06_26_19_31_59"
-    engine_path = main()
+    engine_path = "engine/2021_06_26_19_31_59"
+    # engine_path = main()
 
     term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
-    set_dict(term_dict, engine_path)
     import os
 
     query_options = {
@@ -26,18 +25,18 @@ if __name__ == '__main__':
         "K_nearest_num": 5,
         "TopK": True,  # 通用查询，可与同义词扩展一起用
         "TopK_num": 10,
-        "vector_model_path": engine_path + "/term_dict_vector_model.csv"
+        "vector_model_path": "engine/2021_06_26_19_31_59/term_dict_vector_model.csv"
     }
-    # query = "Vegetable oil registrations"
-    # position_index_df = pd.read_csv(engine_path + "/term_dict_with_positional_index.csv")
-    # if query_options["K_nearest"]:
-    #     doc_id_list = k_nearest_for_query(position_index_df, query, query_options["K_nearest_num"])  # 返回文档列表
-    #
-    # if query_options["synonym"]:  # 同义词扩展
-    #     query = get_synonyms(query, query_options["synonym_num"])
-    # if query_options["TopK"]:  # topk
-    #     doc_id_list = TopK(query, query_options["vector_model_path"], query_options["TopK_num"])
-    #
-    # doc_id_list = [get_doc_name_from_doc_id("Reuters/", doc_id) for doc_id in doc_id_list]  # 按序号对应文件名
+    query = "Vegetable oil registrations"
+    position_index_df = pd.read_csv("engine/2021_06_26_19_31_59/term_dict_with_positional_index.csv")
+    if query_options["K_nearest"]:
+        doc_id_list = k_nearest_for_query(position_index_df, query, query_options["K_nearest_num"])  # 返回文档列表
 
-    start()
+    if query_options["synonym"]:  # 同义词扩展
+        query = get_synonyms(query, query_options["synonym_num"])
+    if query_options["TopK"]:  # topk
+        doc_id_list = TopK(query, query_options["vector_model_path"], query_options["TopK_num"])
+
+    doc_id_list = [get_doc_name_from_doc_id("Reuters/", doc_id) for doc_id in doc_id_list]  # 按序号对应文件名
+    print(doc_id_list)
+    #start()
