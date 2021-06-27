@@ -7,7 +7,7 @@ from .output_format import success_info, error_info, warning_info, plain_info, h
 from .spell_correction import correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
 from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict, get_doc_word_position
-from ..construct_engine.topk import TopK
+from ..construct_engine.topk import NewTopK
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 from ..construct_engine.preprocess import preprocess_for_query
 
@@ -59,12 +59,12 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, vector_model_path,term_dict,word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model,term_dict,word_correction=True, wildcards_search=True):
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    ret = TopK(term_dict,vector_model_path,query)
+    ret = NewTopK(term_dict,vector_model,query)
     ret = [int(x) for x in ret]
     return ret, words
 
@@ -143,7 +143,7 @@ def display_result(query, ret, brief =False):
 def start():
     set_dict(engine_path)
     term_dict=pd.read_csv(engine_path+"/term_dict.csv")
-    vector_model_path=engine_path+"/term_dict_vector_model" 
+    vector_model=pd.read_csv(engine_path+"/term_dict_vector_model.csv")
     word_correction = True
     brief = True
     model_select = 1
@@ -186,7 +186,7 @@ def start():
         if model_select == 1:
             ret = bool_search_interface(query, word_correction)
         elif model_select == 2:
-            ret = topk_search_interface(query, word_correction)
+            ret = topk_search_interface(query,vector_model,term_dict, word_correction)
         elif model_select == 3:
             ret = k_nearest_search_interface(query,word_correction)
         else:
