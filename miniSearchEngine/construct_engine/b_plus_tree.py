@@ -1,5 +1,5 @@
-import math
 import os
+import math
 
 
 class Node(object):
@@ -30,7 +30,7 @@ class Node(object):
             else:
                 self.bring_down_adjust()
 
-    def insert(self, key, child=None):
+    def insert(self, key, child):
         flag = 0
         for i in range(len(self.keys)):
             if self.keys[i] > key:
@@ -63,7 +63,7 @@ class Node(object):
         for child in new_node.children:
             child.parent = new_node
         self.children = self.children[:index]
-        if self.parent is None:
+        if self.parent == None:
             node_p = Node(None, self.degree)
             node_p.creation_insert(r, self, new_node)
             self.parent = node_p
@@ -76,15 +76,16 @@ class Node(object):
     def remove_adjust(self):
         if self.children[0].t == 'leaf':
             self.update_keys()
-            if self.parent is None:
+            if self.parent == None:
                 return self.children[0].parent
-        if self.parent.parent is None:
+        if self.parent.parent == None:
             return self.parent
         else:
             return self.parent.remove_adjust()
 
     def bring_down_adjust(self):
-        if self.parent is None:
+        flag = 0
+        if self.parent == None:
             self.keys = self.children[0].keys
             self.children = []
         elif len(self.parent.keys) == 1:
@@ -130,7 +131,6 @@ class Node(object):
 
 class Leaf(Node):
     def __init__(self, previous_leaf, next_leaf, parent, degree):
-        super(Leaf, self).__init__(parent, degree)
         self.parent = parent
         self.degree = degree
         self.previous_leaf = previous_leaf
@@ -153,7 +153,7 @@ class Leaf(Node):
         except:
             return -1, key
 
-    def insert(self, key, child=None):
+    def insert(self, key):
         flag = 0
         for i in range(len(self.keys)):
             if self.keys[i] > key:
@@ -175,8 +175,10 @@ class Leaf(Node):
         print(self.next_leaf)
         if self.next_leaf == None or len(self.next_leaf.keys) + len(self.keys) - index > self.degree - 1:
             new_leaf = Leaf(self, None, self.parent, self.degree)
-            self.next_leaf.previous_leaf = new_leaf
-
+            try:
+                self.next_leaf.previous_leaf = new_leaf
+            except:
+                None
             new_leaf.next_leaf = self.next_leaf
             self.next_leaf = new_leaf
             new_leaf.keys = self.keys[index:]
@@ -203,7 +205,7 @@ class Leaf(Node):
             self.keys = self.keys[:index]
             n = self.parent
             n.update_keys()
-            while n.parent is not None:
+            while (n.parent != None):
                 n = n.parent
             return n
 
@@ -216,8 +218,8 @@ class Leaf(Node):
     def remove(self, value):
         self.keys.remove(value)
         p = self.parent
-        if not self.property():
-            if self.next_leaf is not None:
+        if self.property() == False:
+            if self.next_leaf != None:
                 if self.next_leaf.parent == p:
                     if len(self.keys) + len(self.next_leaf.keys) <= self.degree - 1:
                         self.merge(self.next_leaf, 1)
@@ -229,7 +231,7 @@ class Leaf(Node):
                             self.keys.append(self.next_leaf.keys[count])
                             count += 1
                         self.next_leaf.keys = self.next_leaf.keys[count:]
-            elif self.previous_leaf is not None:
+            elif self.previous_leaf != None:
                 if self.previous_leaf.parent == p:
                     if len(self.keys) + len(self.previous_leaf.keys) <= self.degree - 1:
                         self.merge(self.previous_leaf, -1)
@@ -244,7 +246,7 @@ class Leaf(Node):
                             count -= 1
                         self.previous_leaf.keys = self.previous_leaf.keys[:count + 1]
                         print(self.previous_leaf.keys)
-        if p.parent is None:
+        if p.parent == None:
             p.update_keys()
             return p
         else:
@@ -267,7 +269,7 @@ class BPlusTree(object):
                     break
             if flag == 0 and len(node.children) > len(node.keys):
                 node = node.children[len(node.keys)]
-        print("searching for item {}".format(value), node.keys)
+        # print("searching for item {}".format(value), node.keys)
         try:
             index = node.keys.index(value)
             return index, node, 1
@@ -279,10 +281,10 @@ class BPlusTree(object):
         if r == 1:
             print('{} is already present in the tree'.format(value))
         else:
-            tmp_list = leaf.insert(value, )
+            l = leaf.insert(value)
             print("{} has been successfully added to the tree".format(value))
-            if tmp_list != 0:
-                self.root = tmp_list
+            if l != 0:
+                self.root = l
 
     def delete(self, value):
         d, leaf, r = self.search(value, self.root)
@@ -296,7 +298,7 @@ class BPlusTree(object):
 
 
 def write_tree(node, ident, count, file):
-    file.write([ident * count + node.keys + "\n"])
+    file.writelines([ident * count + str(node.keys) + "\n"])
     count += 1
     if node.t == 'node':
         for child in node.children:
@@ -320,5 +322,5 @@ def write_tree2disk(engine_path, keys, values, order=4):
     file.close()
 
     with open(os.path.join(tree_folder, "tree.txt"), "w") as file:
-        write_tree(tree.root, ' ', 0, file)
+        write_tree(tree.root, '    ', 0, file)
     file.close()

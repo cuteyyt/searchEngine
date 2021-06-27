@@ -38,6 +38,4 @@ if __name__ == '__main__':
     doc_id_list = [get_doc_name_from_doc_id("Reuters/", doc_id) for doc_id in doc_id_list]  # 按序号对应文件名
     print(doc_id_list)
     """
-    term_dict = get_engine_from_csv(engine_path, "term_dict")
-    initialize(term_dict, engine_path)
-    start()
+    # start()
