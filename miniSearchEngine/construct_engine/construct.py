@@ -31,7 +31,7 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 100 files for debug.
-        if i >= 100:
+        if i >= 1000:
             break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r', encoding='GBK') as file:
@@ -190,7 +190,7 @@ def construct_vector_model_v2(args, term_dict, doc_dict, filename, step_nums=100
                     vector_model[j][term] = (1. + math.log10(tf_matrix[j][term])) * math.log10(
                         n / df_list[term])
 
-        vm_dict = {'doc_id': list(doc_dict.keys())}
+        vm_dict = {'doc_id': list(vector_model.keys())}
 
         for term in term_dict.keys():
             vm_dict[term] = list()
