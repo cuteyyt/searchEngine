@@ -1,4 +1,4 @@
-from .spell_correction import correct_bad_words
+from .spell_correction import correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
 from .output_format import warning_info, error_info, plain_info, highlight_info
 from .pretreatment import get_term_dict
@@ -12,15 +12,6 @@ OPT_OR = "|"
 OPT_NOT = "~"
 WILDCARDS_STAR = "*"
 
-
-def spell_correction_info(word, new_word):
-    highlight_info(word + " can't be recognized. Do you mean '" + new_word + "' ?")
-
-    highlight_info("We have shown you the result of '" + new_word + "'")
-
-    plain_info("If you still want to search '" + word + "', please use such command to close word correction:")
-
-    warning_info('"! close word correction" or "! close wc"')
 
 def bool_opt_and(docs1, docs2):
     ret = []
@@ -141,14 +132,15 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                 sta[-2] = bool_opt_and(sta[-2], sta[-1])
                 sta.pop()
             elif len(sta) >=2 and sta[-2] == OPT_NOT:
-                sta[-2] = bool_opt_not(sta[-1],100)
+                # TODO fix 100
+                sta[-2] = bool_opt_not(sta[-1], 100)
                 sta.pop()
             elif len(sta) >=3 and sta[-2] == OPT_AND and isinstance(sta[-3], list):
-                sta[-3] = bool_opt_and(sta[-3],sta[-1])
+                sta[-3] = bool_opt_and(sta[-3], sta[-1])
                 sta.pop()
                 sta.pop()
             elif len(sta) >= 3 and sta[-2] == OPT_OR and isinstance(sta[-3], list):
-                sta[-3] = bool_opt_or(sta[-3],sta[-1])
+                sta[-3] = bool_opt_or(sta[-3], sta[-1])
                 sta.pop()
                 sta.pop()
             else:
@@ -158,12 +150,4 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
         error_info("ERROR! Syntax failed!")
         return
 
-    ret = {}
-
-    for word in words:
-        ret[word] = {}
-        for doc in sta[0]:
-            if doc in term_dict[word]['posting_list']:
-                ret[word][doc] = term_dict[word]['posting_list'][doc]
-
-    return ret, sta[0]
+    return sta[0], words

@@ -4,8 +4,8 @@ import operator
 from ..construct_engine.utils import get_engine_from_csv
 from .utils import write_other_dict2disk
 
-engine_path = "engine/2021_06_27_00_12_09"
 pre_term_dict = {}
+pre_term_dict_vector_model = {}
 spell_correction_dict = {}
 rotation_index = {}
 
@@ -78,11 +78,13 @@ def initialize(term_dict, engine_path):
     write_other_dict2disk(rotation_index, os.path.join(engine_path, "rotation_index.csv"))
 
 
-def set_dict(term_dict_, spell_correction_dict_, rotation_index_):
-    global pre_term_dict, spell_correction_dict, rotation_index
-    pre_term_dict = term_dict_
-    spell_correction_dict = spell_correction_dict_
-    rotation_index = rotation_index_
+def set_dict(engine_path):
+    global pre_term_dict, spell_correction_dict, rotation_index, pre_term_dict_vector_model
+    pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
+    pre_term_dict_vector_model = get_engine_from_csv(engine_path, "term_dict_vector_model")
+    initialize(pre_term_dict, engine_path)
+    # spell_correction_dict = get_engine_from_csv(engine_path, "spell_correction_dict")
+    # rotation_index = get_engine_from_csv(engine_path, "rotation_index")
 
 
 def get_spell_correction_dict(initial_letter, word_length):
@@ -109,12 +111,14 @@ def get_rotation_index(prefix):
 
 
 def get_frequency(word):
-    global pre_term_dict
     if word in pre_term_dict:
         return pre_term_dict[word]['doc_feq']
     return 0
 
 
 def get_term_dict():
-    global pre_term_dict
     return pre_term_dict
+
+
+def get_term_dict_vector_model():
+    return pre_term_dict_vector_model

@@ -9,6 +9,9 @@ def k_nearest_for_query(df,query,k=5):
     # query = query.lower().split(" ")
     query = query.split(" ")
     length=len(query)
+    if(length<=1):
+        print("Error:k_nearest_search need at least two words!")
+        return []
     i=0
     tmp_list=[]
     while i<length-1: # 获取每邻近的两个单词的k邻近列表
