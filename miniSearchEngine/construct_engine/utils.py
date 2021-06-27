@@ -84,6 +84,12 @@ def parsing_json(file_path):
     return args
 
 
+def get_doc_name_from_doc_id(data_path, doc_id):
+    filenames = os.listdir(data_path)
+    filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+    return filenames[doc_id]
+
+
 def display_query_result(data_path, term, pos):
     """
 

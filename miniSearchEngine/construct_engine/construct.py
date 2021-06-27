@@ -324,7 +324,7 @@ def main():
                              "default is 1.")
     parser.add_argument("--stop", "--stopwords", type=bool, default=False,
                         help="Whether to remove stop words, default is FALSE.")
-    parser.add_argument("--norm", "--normalization", type=bool, default=False,
+    parser.add_argument("--norm", "--normalization", type=bool, default=True,
                         help="Whether to use token normalization, default is FALSE."
                              "Convert UPPER to LOWER only.")
     parser.add_argument("--lem", "--lemmatization", type=bool, default=False,
