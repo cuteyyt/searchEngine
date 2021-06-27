@@ -11,5 +11,11 @@ if __name__ == '__main__':
     # engine_path = "engine/2021_06_26_21_56_17"
     engine_path = main()
 
-    get_doc_name_from_doc_id("Reuters/", 1)
+    term_dict = get_engine_from_csv(engine_path, "term_dict")
+    initialize(term_dict, engine_path)
+    # get_doc_name_from_doc_id("Reuters/", 1)
+
+    rotation_index = get_engine_from_csv(engine_path, "rotation_index")
+    spell_correction_dict = get_engine_from_csv(engine_path, "spell_correction_dict")
+
     start()

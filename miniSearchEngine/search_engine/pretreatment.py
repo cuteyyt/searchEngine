@@ -1,6 +1,8 @@
+import os
 import functools
 import operator
 from ..construct_engine.utils import get_engine_from_csv
+from .utils import write_other_dict2disk
 
 engine_path = "engine/2021_06_27_00_12_09"
 pre_term_dict = {}
@@ -40,7 +42,7 @@ def initialize_rotation_index(term_list):
         lens = len(word)
         rotated_term_list.append((word, word_src))
         for i in range(1, lens):
-            rotated_term_list.append((word[i:]+word[0:i], word_src))
+            rotated_term_list.append((word[i:] + word[0:i], word_src))
     rotated_term_list.sort(key=lambda word_tuple: word_tuple[0])
 
     last_pos = 0
@@ -53,7 +55,7 @@ def initialize_rotation_index(term_list):
     rotation_index[last_2_letter] = rotated_term_list[last_pos:]
 
 
-def initialize(term_dict):
+def initialize(term_dict, engine_path):
     global pre_term_dict
     global spell_correction_dict
     pre_term_dict = term_dict
@@ -72,7 +74,8 @@ def initialize(term_dict):
             last_tuple = (term_list[i][0], len(term_list[i]))
             last_pos = i
     spell_correction_dict[last_tuple] = term_list[last_pos:]
-    return spell_correction_dict, rotation_index
+    write_other_dict2disk(spell_correction_dict, os.path.join(engine_path, "spell_correction_dict.csv"))
+    write_other_dict2disk(rotation_index, os.path.join(engine_path, "rotation_index.csv"))
 
 
 def set_dict(term_dict_, spell_correction_dict_, rotation_index_):
