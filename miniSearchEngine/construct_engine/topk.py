@@ -5,14 +5,19 @@ import numpy as np
 def Binaryfind(TermList, target):
     start = 0
     end = len(TermList) - 1
-    while start <= end:
+    while start < end:
         middle =int((start + end)/ 2)
         midpoint = TermList[middle]
         if midpoint > target:
             end = middle - 1
+            if start==end:
+                return start
         elif midpoint < target:
             start = middle + 1
+            if start==end:
+                return start
         else:
+            #print("middle",middle) 
             return middle
 
 def TopK(query,vector_model_file,k=10):
@@ -24,12 +29,13 @@ def TopK(query,vector_model_file,k=10):
     """
     df=pd.read_csv(open(vector_model_file))
     term_list=list(df["term"])
-    # display(term_list)
+    #print(term_list)
     query=query.split(" ")
     # print(query)
     query_vector=np.zeros(len(term_list))
     for qterm in query:
         idx = Binaryfind(term_list,qterm)
+        # print(idx)
         if term_list[idx]==qterm:# 可能词项列表中没有query的词汇
             query_vector[idx]=1
     sim_dict={}# 每个doc对应的的余弦相似度
@@ -40,8 +46,10 @@ def TopK(query,vector_model_file,k=10):
     sim_dict=sorted(sim_dict.items(), key = lambda kv:(kv[1], kv[0]), reverse=True)
     topk_list=[]
     for _ in sim_dict[0:k]:
-        topk_list.append(_[0])
-    #topk_list=sim_dict[0:k]
+        # print(_)
+        if _[1]!=0:
+            topk_list.append(_[0])
+        else : break;
     return topk_list
 
-# print(TopK("Prime Minister","../../vector_model.csv"))
+print(TopK("Showers continued throughout","engine\\2021_06_27_11_25_11\\term_dict_vector_model.csv"))
