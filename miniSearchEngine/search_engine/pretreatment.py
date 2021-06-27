@@ -81,7 +81,7 @@ def initialize(term_dict, engine_path):
 def set_dict(engine_path):
     global pre_term_dict, spell_correction_dict, rotation_index, pre_term_dict_vector_model
     pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
-    pre_term_dict_vector_model = get_engine_from_csv(engine_path, "term_dict_vector_model")
+    # pre_term_dict_vector_model = get_engine_from_csv(engine_path, "term_dict_vector_model")
     initialize(pre_term_dict, engine_path)
     # spell_correction_dict = get_engine_from_csv(engine_path, "spell_correction_dict")
     # rotation_index = get_engine_from_csv(engine_path, "rotation_index")

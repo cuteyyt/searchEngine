@@ -95,13 +95,6 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
         elif word == OPT_NOT:
             sta.append(OPT_NOT)
         else:
-
-            word = preprocess_for_query(word, engine_path)
-            if len(word) == 0:
-                word = "!!!InvalidCharacter!!!"
-            else:
-                word = word[0]
-
             # handle wildcards search
             if wildcards_search and WILDCARDS_STAR in word:
                 candidate_words = get_wildcards_word(word)
@@ -118,6 +111,11 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                 words = words + candidate_words
             # no wildcards search
             else:
+                word = preprocess_for_query(word, engine_path)
+                if len(word) == 0:
+                    word = "!!!InvalidCharacter!!!"
+                else:
+                    word = word[0]
                 # word correction
                 if word_correction and word not in term_dict:
                     new_word = correct_bad_words(word)
@@ -140,8 +138,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
                 sta[-2] = bool_opt_and(sta[-2], sta[-1])
                 sta.pop()
             elif len(sta) >=2 and sta[-2] == OPT_NOT:
-                # TODO fix 100
-                sta[-2] = bool_opt_not(sta[-1], 100)
+                sta[-2] = bool_opt_not(sta[-1], 10788)
                 sta.pop()
             elif len(sta) >=3 and sta[-2] == OPT_AND and isinstance(sta[-3], list):
                 sta[-3] = bool_opt_and(sta[-3], sta[-1])
