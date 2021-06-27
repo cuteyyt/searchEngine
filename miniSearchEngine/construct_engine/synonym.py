@@ -5,7 +5,12 @@ def merge_synonyms_list(sym_list):
     sym_list=[" ".join(sym) for sym in sym_list]
     return " ".join(sym_list)
 
-def get_synonyms(query, n=5):# 获取查询的同义词，返回值为[[每个词的同义词列表],……]
+def get_synonyms(query, n=5):
+    """
+    query:查询字符串 如"term1 term2 term3"
+    n:每个term最多返回n个同义词(注意term自身也算在里面)
+    返回值:所有term的同义词组成的字符串，用空格隔开
+    """
     punctuations=list(string.punctuation)# 去除标点
     for punctuation in punctuations:
         query = query.replace(punctuation,' ')
