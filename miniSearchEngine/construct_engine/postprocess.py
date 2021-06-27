@@ -67,7 +67,7 @@ def construct_gram_index(engine_path, k=2):
 
 
 def construct_b_plus_tree(engine_path, order=4):
-    print("I'm doing the task: creating a b+ tree with order {} to {}.".format(engine_path, order))
+    print("I'm doing the task: creating a b+ tree with order {} to {}.".format(order, engine_path))
     start = time.time()
 
     for engine_name in os.listdir(engine_path):
@@ -75,6 +75,6 @@ def construct_b_plus_tree(engine_path, order=4):
             df = pd.read_csv(os.path.join(engine_path, engine_name))
             keys = list(df['term'])
             values = list([str(_) for _ in range(len(keys))])
-            write_tree2disk(os.path.join(engine_path, "tree"), keys, values, order)
+            # write_tree2disk(os.path.join(engine_path, "tree"), keys, values, order)
     end = time.time()
     print("I have done the task in {:.4f} seconds.".format(end - start))
