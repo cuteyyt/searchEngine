@@ -1,4 +1,5 @@
 import time
+import pandas
 
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info, highlight_info
@@ -7,12 +8,15 @@ from .spell_correction import  correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
 from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict
 from ..construct_engine.topk import TopK
+from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 
 
 close_word_correction = ["! close word correction", "! close wc"]
 open_word_correction = ["! open word correction", "! open wc"]
 EXIT_COMMAND = ["! exit"]
 WILDCARDS_STAR = "*"
+
+engine_path = "engine/2021_06_27_19_38_59"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
@@ -47,11 +51,16 @@ def topk_search_interface(query, word_correction=True, wildcards_search=True):
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    return TopK(query, "engine/2021_06_27_16_26_07/term_dict_vector_model.csv"), words
+    return TopK(query, engine_path + "/term_dict_vector_model.csv"), words
 
 
 def k_nearest_search_interface(query, word_correction, wildcards_search=True):
-    return None
+    words = parse_query(query, word_correction, wildcards_search)
+    if len(words) == 0:
+        return None
+    query = ' '.join(words)
+    df = pandas.read_csv(open(engine_path+"/term_dict_with_positional_index.csv"))
+    return k_nearest_for_query(df,query), words
 
 
 def display_result(query, ret):
@@ -65,7 +74,7 @@ def display_result(query, ret):
 
 
 def start():
-    set_dict("engine/2021_06_27_16_26_07")
+    set_dict(engine_path)
     word_correction = True
     while True:
         model_select = input("select search method(1.bool search | 2.topk search | 3.k_nearest search):\n")

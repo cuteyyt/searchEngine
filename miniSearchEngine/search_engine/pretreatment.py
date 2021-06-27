@@ -83,8 +83,8 @@ def set_dict(engine_path):
     pre_term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
     pre_term_dict_vector_model = get_engine_from_csv(engine_path, "term_dict_vector_model")
     initialize(pre_term_dict, engine_path)
-    spell_correction_dict = get_engine_from_csv(engine_path, "spell_correction_dict")
-    rotation_index = get_engine_from_csv(engine_path, "rotation_index")
+    # spell_correction_dict = get_engine_from_csv(engine_path, "spell_correction_dict")
+    # rotation_index = get_engine_from_csv(engine_path, "rotation_index")
 
 
 def get_spell_correction_dict(initial_letter, word_length):

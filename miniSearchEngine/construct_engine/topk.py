@@ -52,4 +52,6 @@ def TopK(query,vector_model_file,k=10):
         else : break;
     return topk_list
 
-print(TopK("Showers continued throughout","engine\\2021_06_27_11_25_11\\term_dict_vector_model.csv"))
+
+if __name__ == '__main__':
+    print(TopK("Showers continued throughout","engine\\2021_06_27_11_25_11\\term_dict_vector_model.csv"))
