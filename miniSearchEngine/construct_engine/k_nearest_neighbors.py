@@ -28,7 +28,7 @@ def k_nearest_for_query(df,query,k=5):
     # print(tmp_list)
     tmp_list=tmp_list[0] # 取出嵌套的列表
     doc_id_list=[triple[0] for triple in tmp_list] # 取出列表的doc_id
-    return doc_id_list
+    return list(set(doc_id_list))
 
 def merge_doc_list(list1,list2,k):
     """
