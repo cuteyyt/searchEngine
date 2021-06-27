@@ -31,8 +31,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 100 files for debug.
-        # if i >= 100:
-        #     break
+        if i >= 100:
+            break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r', encoding='GBK') as file:
             content = file.read()
@@ -157,6 +157,60 @@ def construct_term_dict(args, term_dict, filename):
     return term_dict
 
 
+def construct_vector_model_v2(args, term_dict, doc_dict, filename, step_nums=1000):
+    print("\tI'm creating the vector model v2 for {}...".format(filename))
+    filename = filename.replace(' ', '_')
+    start = time.time()
+
+    n = len(doc_dict)
+
+    total_doc_nums = len(doc_dict)
+    step_nums = step_nums
+
+    df_list = {key: term_dict[key]['doc_feq'] for key in term_dict.keys()}
+    os.makedirs(os.path.join(args.engine_path, filename + "_vector_model"), exist_ok=True)
+    for step in tqdm(range(1, total_doc_nums + 1, step_nums)):
+        if step + step_nums <= total_doc_nums + 1:
+            offset = step_nums
+        else:
+            offset = total_doc_nums - step
+        tf_matrix = dict()
+        vector_model = dict()
+        for j in range(step, step + offset):
+
+            tf_matrix[j] = {key: 0. for key in term_dict.keys()}
+            vector_model[j] = {key: 0. for key in term_dict.keys()}
+
+            content = doc_dict[j]['text']
+            raw_term_list = content.split(" ")
+            for i, term in enumerate(raw_term_list):
+                term = preprocess_for_term(args, term)
+                if term != "":
+                    tf_matrix[j][term] = len(term_dict[term]['posting_list'][j])
+                    vector_model[j][term] = (1. + math.log10(tf_matrix[j][term])) * math.log10(
+                        n / df_list[term])
+
+        vm_dict = {'doc_id': list(doc_dict.keys())}
+
+        for term in term_dict.keys():
+            vm_dict[term] = list()
+            for doc_id in vector_model.keys():
+                vm_dict[term].append(vector_model[doc_id][term])
+
+        vm = pd.DataFrame(vm_dict)
+
+        vm.to_csv(
+            os.path.join(args.engine_path, filename + "_vector_model",
+                         "step{:03d}.csv".format(step // step_nums)),
+            index=False, sep=',')
+
+    row = len(term_dict.keys())
+    col = len(doc_dict.keys())
+
+    end = time.time()
+    print("\tVector model v2 {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
+
+
 def construct_vector_model(args, term_dict, doc_dict, filename, step_nums=1000):
     print("\tI'm creating the vector model for {}...".format(filename))
     filename = filename.replace(' ', '_')
@@ -214,17 +268,17 @@ def construct_dict_with_vector_model(args, raw_doc_dict):  # 既创建向量空�
     name = "term dict"
     term_dict_with_positional_index = construct_term_dict_with_positional_index(args, raw_doc_dict)
     construct_term_dict(args, term_dict_with_positional_index, name)
-    construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
+    construct_vector_model_v2(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
     if args.biword:
         name = "biword dict"
         term_dict_with_positional_index = construct_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
+        construct_vector_model_v2(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
     if args.extended_biword:
         name = "extend biword dict"
         term_dict_with_positional_index = construct_extended_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
+        construct_vector_model_v2(args, term_dict_with_positional_index, raw_doc_dict, name, args.step_nums)
 
 
 def construct_engine(args):
@@ -362,32 +416,32 @@ def main():
                              "Use NLTK's PorterStemmer.")
 
     # index specification
-    parser.add_argument("--biword", "--biword_index", type=bool, default=True,
+    parser.add_argument("--biword", "--biword_index", type=bool, default=False,
                         help="Whether to create biword indexes.")
-    parser.add_argument("--extended_biword", type=bool, default=True,
+    parser.add_argument("--extended_biword", type=bool, default=False,
                         help="Whether to use extended biword.")
 
     # Faster term search/Complex index
-    parser.add_argument("--tree", "--B_plus_tree", type=int, default=4,
+    parser.add_argument("--tree", "--B_plus_tree", type=int, default=0,
                         help="Whether to create a B+ tree for the term."
                              "0 stands for NOT and other POSITIVE INTEGER stands for the B+ tree's order.")
-    parser.add_argument("--permuterm", "--perm", type=bool, default=True,
+    parser.add_argument("--permuterm", "--perm", type=bool, default=False,
                         help="Whether to create a permuterm index.")
-    parser.add_argument("--gram", type=int, default=3,
+    parser.add_argument("--gram", type=int, default=0,
                         help="Whether to create a K-gram index."
                              "0 stands for NOT and other POSITIVE INTEGER stands for the K value_.")
 
     # index compression (as postprocess)
-    parser.add_argument("--compress_doc_id", type=str, default="vb",
+    parser.add_argument("--compress_doc_id", type=str, default="none",
                         help="Whether to compress doc id."
                              "none: keep original form."
                              "vb: use vb encoding."
                              "gamma: use gamma encoding.")
 
     # Others
-    parser.add_argument("--step_nums", type=int, default=1000,
-                        help="The term number of one iteration when creating vector model."
-                             "Suggested is any integer between [1000, 5000].")
+    parser.add_argument("--step_nums", type=int, default=100,
+                        help="The doc number of one iteration when creating vector model."
+                             "Suggested is any integer between [100, 500].")
 
     args = parser.parse_args()
 

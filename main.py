@@ -12,9 +12,9 @@ from miniSearchEngine.construct_engine.utils import get_doc_name_from_doc_id
 import pandas as pd
 
 if __name__ == '__main__':
-    engine_path = "engine\\2021_06_27_15_13_01"
-    # engine_path = main()
-    get_engine_from_csv(engine_path, "term_dict_vector_model")
+    # engine_path = "engine/2021_06_27_15_13_01"
+    engine_path = main()
+    # get_engine_from_csv(engine_path, "term_dict_vector_model")
 
     """
     term_dict = get_engine_from_csv(engine_path, "term_dict_with_positional_index")
