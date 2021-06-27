@@ -11,8 +11,7 @@ from nltk import pos_tag
 
 from .utils import insert_term2dict, write_term_dict2disk
 from .preprocess import preprocess_for_term
-
-import tqdm
+from .index_compression import index_compression
 
 
 def read_files(data_path="Reuters"):
@@ -30,8 +29,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i, filename in enumerate(filenames):
         # FIXME: Choose first 100 files for debug.
-        # if i >= 100:
-        #     break
+        if i >= 100:
+            break
         with open(os.path.join(data_path, filename), 'r') as file:
             content = file.read()
             doc_dict[i + 1] = dict()
@@ -224,12 +223,9 @@ def construct_engine(args):
         if len(os.listdir(data_path)) == 0:
             raise ValueError("No file in directory {}".format(data_path))
         filenames = os.listdir(data_path)
-        # filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
+        filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
         term_dict = dict()
         for i, filename in enumerate(filenames):
-            # FIXME: Choose first 100 files for debug.
-            # if i >= 100:
-            #     break
             with open(os.path.join(data_path, filename), 'r') as file:
                 content = file.read()
                 raw_term_list = content.split(" ")
@@ -247,6 +243,7 @@ def construct_engine(args):
         end = time.time()
         print("I have done the task \"construct search engine\" with {} files in {:.4f} seconds.".format(len(filenames),
                                                                                                          end - start))
+        exit(0)
     else:
         data_path = args.data_path
 
@@ -262,8 +259,11 @@ def construct_engine(args):
         if args.extended_biword:
             exist_engine_names += ['extended_biword_dict', 'extended_biword_dict_with_positional_index',
                                    'extended_biword_dict_vector_model']
-        print("{:d} engine files [{}] have been saved to path: {}".format(len(exist_engine_names), exist_engine_names,
-                                                                          args.engine_path))
+        print("{:d} engine files {} have been saved to path: {}".format(len(exist_engine_names), exist_engine_names,
+                                                                        args.engine_path))
+
+        if args.compress_doc_id != "none":
+            index_compression(args.engine_path, args.compress_doc_id)
 
 
 def check_parameter_integrity(args):
@@ -299,9 +299,9 @@ def check_parameter_integrity(args):
         print("Note: positional index will be created anyway for tf calculate and result display."
               "However, set this FALSE means we will refer to the dict without positional index "
               "and may have a faster query speed.")
-    if (not args.biword) and (not args.pos) and (not args.mixed) and (not args.extended_biword):
+    if (not args.biword) and (not args.pos) and (not args.extended_biword):
         print("Warning: please set at least one of the "
-              "[\'--biword\',\'--pos\',\'--mixed\',\'extended_biword\'] TRUE to enable phrase query.")
+              "[\'--biword\',\'--pos\',\'extended_biword\'] TRUE to enable phrase query.")
 
     if (not args.permuterm) and (not args.gram) and (not args.tree):
         print(
@@ -357,10 +357,6 @@ def main():
                         help="Whether to create biword indexes.")
     parser.add_argument("--pos", "--positional_index", type=bool, default=True,
                         help="Whether to create positional indexes.")
-    parser.add_argument("--mixed", "--mixed_index", type=bool, default=False,
-                        help="Whether to use biword and positional mixed index."
-                             "Note: This is not equal to biword + positional index."
-                             "We use highly queried biword from users to reduce index scale.")
     parser.add_argument("--extended_biword", type=bool, default=True,
                         help="Whether to use extended biword.")
 
@@ -380,10 +376,6 @@ def main():
                              "none: keep original form."
                              "vb: use vb encoding."
                              "gamma: use gamma encoding.")
-
-    # Effective when doing queries
-    parser.add_argument("--skip_list", type=bool, default=False,
-                        help="Whether to use skip list when doing queries.")
 
     args = parser.parse_args()
 

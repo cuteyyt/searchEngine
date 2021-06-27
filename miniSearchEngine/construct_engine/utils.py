@@ -5,6 +5,8 @@ from easydict import EasyDict
 
 import pandas as pd
 
+from .index_compression import restore_dict
+
 
 def insert_term2dict(term, _dict, doc_id, pos_id):
     if term != "":
@@ -36,7 +38,7 @@ def write_term_dict2disk(term_dict, filename):
     data_frame.to_csv(filename, index=False, sep=',')
 
 
-def get_engine_from_csv(file_path, name):
+def get_engine_from_csv(file_path, name, mode="vb"):
     filename = name + ".csv"
     file_name = os.path.join(file_path, name + ".csv")
     if filename not in os.listdir(file_path):
@@ -45,6 +47,8 @@ def get_engine_from_csv(file_path, name):
     print("\tI'm Loading the {} from {}".format(name, file_name))
     start = time.time()
     dict_map = dict()
+    if "compressed" in name:
+        return restore_dict(file_name, mode)
     if "dict" in name and "vector_model" not in name and "spell" not in name:
         df = pd.read_csv(file_name)
         for i, term in enumerate(df['term']):

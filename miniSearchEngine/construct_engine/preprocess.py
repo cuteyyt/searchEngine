@@ -53,9 +53,12 @@ def stemming(stemmer, term):
 
 
 def dot_check(term):
-    check_list = list(term)
-    if check_list[-1] == ".":
-        term = "".join(check_list[:-1])
+    check_list = term.split(".")
+    filter_list = list(filter(lambda x: x != "", check_list))
+    if len(filter_list) == 1:
+        term = filter_list[0]
+    else:
+        term = ".".join(filter_list)
     return term
 
 

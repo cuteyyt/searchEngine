@@ -198,6 +198,8 @@ class BPlusTree:
             self.root = new_root
 
     def tree_insert(self, key_, value_, node):
+        ans = False
+
         if node.is_leaf:
             index = bisect.bisect(node.keys, key_)
             node.keys[index:index] = [key_]
@@ -310,7 +312,7 @@ def write_stats():
 
 if __name__ == '__main__':
     # Initialize variables
-    file_counter = 0  # Used to keep track of filename
+    file_counter = 0  # Used to keep track of engine_path
     disk_counter = 0  # Used to count disk access
     start_time = 0  # Used to store start time
     end_time = 0  # Used to store end time
