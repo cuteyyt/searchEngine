@@ -3,7 +3,7 @@ from .wildcards_search import get_wildcards_word
 from .output_format import warning_info, error_info, plain_info, highlight_info
 from .pretreatment import get_term_dict
 from ..construct_engine.preprocess import preprocess_for_query
-engine_path = "engine/2021_06_27_21_20_57"
+engine_path = "engine/2021_06_27_23_58_59"
 
 BRACKETS_LEFT = "("
 BRACKETS_RIGHT = ")"

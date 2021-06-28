@@ -106,7 +106,7 @@ def NewTopK(term_dict,vector_model,query,k=10):
     for _ in sim_dict[0:k]:
         # print(_)
         if _[1]!=0:
-            topk_list.append(_[0])
+            topk_list.append(_)
         else : break;
     # print(sim_dict[0:k])
     return topk_list
