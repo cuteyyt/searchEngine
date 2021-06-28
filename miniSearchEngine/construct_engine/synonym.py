@@ -11,9 +11,9 @@ def get_synonyms(query, n=5):
     n:每个term最多返回n个同义词(注意term自身也算在里面)
     返回值:所有term的同义词组成的字符串，用空格隔开
     """
-    punctuations=list(string.punctuation)# 去除标点
-    for punctuation in punctuations:
-        query = query.replace(punctuation,' ')
+    #punctuations=list(string.punctuation)# 去除标点
+    #for punctuation in punctuations:
+    #    query = query.replace(punctuation,' ')
     # 去除停词
     query = query.split(' ')# 分隔
     

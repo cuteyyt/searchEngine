@@ -8,6 +8,7 @@ from .spell_correction import correct_bad_words, spell_correction_info
 from .wildcards_search import get_wildcards_word
 from .pretreatment import get_term_dict, get_term_dict_vector_model, set_dict, get_doc_word_position
 from ..construct_engine.topk import NewTopK
+from ..construct_engine.synonym import get_synonyms
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 from ..construct_engine.preprocess import preprocess_for_query
 
@@ -19,6 +20,7 @@ DETAIL_MODE = ["! detail", "! d"]
 SWITCH_MODE_1 = ["! switch bool search mode", "! s1", "! switch 1"]
 SWITCH_MODE_2 = ["! switch topk mode", "! s2", "! switch 2"]
 SWITCH_MODE_3 = ["! switch k nearest search mode", "! s3", "! switch 3"]
+SWITCH_MODE_4 = ["! switch synonym topk mode", "! s4", "! switch 4"]
 HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
@@ -58,7 +60,10 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, vector_model, term_dict, word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model, term_dict, synonym = False,word_correction=True, wildcards_search=True):
+    if synonym:
+        query=get_synonyms(query)
+        print(query)
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
@@ -181,6 +186,10 @@ def start():
             model_select = 3
             success_info("You are using k nearest search.")
             continue
+        if query in SWITCH_MODE_4:
+            model_select = 4
+            success_info("You are synonym topk search.")
+            continue
         if query in HELP:
             print("You can read Readme.md.")
             continue
@@ -190,9 +199,11 @@ def start():
         if model_select == 1:
             ret = bool_search_interface(query, word_correction)
         elif model_select == 2:
-            ret = topk_search_interface(query, vector_model, term_dict, word_correction)
+            ret = topk_search_interface(query, vector_model, term_dict,word_correction=word_correction)
         elif model_select == 3:
             ret = k_nearest_search_interface(query, word_correction)
+        elif model_select == 4:
+            ret = topk_search_interface(query, vector_model, term_dict, synonym=True,word_correction=word_correction)
         else:
             ret = bool_search_interface(query, word_correction)
         query_end = time.time()
