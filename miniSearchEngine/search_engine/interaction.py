@@ -11,15 +11,14 @@ from ..construct_engine.topk import NewTopK
 from ..construct_engine.k_nearest_neighbors import k_nearest_for_query
 from ..construct_engine.preprocess import preprocess_for_query
 
-
 close_word_correction = ["! close word correction", "! close wc", "! cwc"]
-open_word_correction = ["! open word correction", "! open wc" , "! owc"]
+open_word_correction = ["! open word correction", "! open wc", "! owc"]
 EXIT_COMMAND = ["! exit", "! e"]
 BRIEF_MODE = ["! brief", "! b"]
 DETAIL_MODE = ["! detail", "! d"]
-SWITCH_MODE_1 = ["! switch bool search mode", "! s1" ,"! switch 1"]
-SWITCH_MODE_2 = ["! switch topk mode", "! s2" ,"! switch 2"]
-SWITCH_MODE_3 = ["! switch k nearest search mode", "! s3" ,"! switch 3"]
+SWITCH_MODE_1 = ["! switch bool search mode", "! s1", "! switch 1"]
+SWITCH_MODE_2 = ["! switch topk mode", "! s2", "! switch 2"]
+SWITCH_MODE_3 = ["! switch k nearest search mode", "! s3", "! switch 3"]
 HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
@@ -59,14 +58,18 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, vector_model,term_dict,word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model, term_dict, word_correction=True, wildcards_search=True):
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    ret = NewTopK(term_dict,vector_model,query)
-    ret = [int(x) for x in ret]
-    return ret, words
+    res = NewTopK(term_dict, vector_model, query)
+    ret = []
+    scores = []
+    for x in res:
+        ret.append(x[0])
+        scores.append(x[1])
+    return ret, words, scores
 
 
 def k_nearest_search_interface(query, word_correction, wildcards_search=True):
@@ -74,16 +77,16 @@ def k_nearest_search_interface(query, word_correction, wildcards_search=True):
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    df = pd.read_csv(open(engine_path+"/term_dict_with_positional_index.csv"))
+    df = pd.read_csv(open(engine_path + "/term_dict_with_positional_index.csv"))
     return k_nearest_for_query(df, query), words
 
 
-def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=False):
+def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=False, score=None):
     if brief:
         filenames = os.listdir(data_path)
         filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
         doc_name = filenames[doc - 1]
-        highlight_info(doc_name)
+        highlight_info(doc_name + ("" if score is None else " score: {:.6f}".format(score)))
         return
 
     pos_list = []
@@ -105,19 +108,20 @@ def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=
 
     filenames = os.listdir(data_path)
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
-    doc_name = filenames[doc-1]
-    highlight_info(doc_name)
+    doc_name = filenames[doc - 1]
+    highlight_info(doc_name + ("" if score is None else " score: {:.6f}".format(score)))
     plain_info("========================================================")
     with open(os.path.join(data_path, doc_name), "r") as file:
         content = file.read()
         raw_term_list = content.split(" ")
         for pos_id in display_list:
-            display_content = " ".join(raw_term_list[pos_id - sentence_len // 2 if pos_id > sentence_len //2 else 0: pos_id + sentence_len])
+            display_content = " ".join(
+                raw_term_list[pos_id - sentence_len // 2 if pos_id > sentence_len // 2 else 0: pos_id + sentence_len])
             print(display_content)
     file.close()
 
 
-def display_result(query, ret, brief =False):
+def display_result(query, ret, brief=False):
     if len(ret[0]) == 0:
         highlight_info("Can't find related documents about your query: " + query)
         return
@@ -128,10 +132,10 @@ def display_result(query, ret, brief =False):
     cnt = 0
     index = 0
     while index < len(ret[0]):
-        for cnt in range(0,10):
+        for cnt in range(0, 10):
             if index >= len(ret[0]):
                 break
-            display_document_details(ret[0][index], ret[1], brief=brief)
+            display_document_details(ret[0][index], ret[1], brief=brief, score=ret[2][index] if len(ret) > 2 else None)
             cnt += 1
             index += 1
         else:
@@ -142,8 +146,8 @@ def display_result(query, ret, brief =False):
 
 def start():
     set_dict(engine_path)
-    term_dict=pd.read_csv(engine_path+"/term_dict.csv",index_col=0)
-    vector_model=pd.read_csv(engine_path+"/term_dict_vector_model.csv")
+    term_dict = pd.read_csv(engine_path + "/term_dict.csv", index_col=0)
+    vector_model = pd.read_csv(engine_path + "/term_dict_vector_model.csv")
     word_correction = True
     brief = True
     model_select = 1
@@ -186,9 +190,9 @@ def start():
         if model_select == 1:
             ret = bool_search_interface(query, word_correction)
         elif model_select == 2:
-            ret = topk_search_interface(query,vector_model,term_dict, word_correction)
+            ret = topk_search_interface(query, vector_model, term_dict, word_correction)
         elif model_select == 3:
-            ret = k_nearest_search_interface(query,word_correction)
+            ret = k_nearest_search_interface(query, word_correction)
         else:
             ret = bool_search_interface(query, word_correction)
         query_end = time.time()
