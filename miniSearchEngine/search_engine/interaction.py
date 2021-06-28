@@ -135,7 +135,7 @@ def display_result(query, ret, brief=False):
         for cnt in range(0, 10):
             if index >= len(ret[0]):
                 break
-            display_document_details(ret[0][index], ret[1], brief=brief, score=ret[2][index] if len(ret) >= 2 else None)
+            display_document_details(ret[0][index], ret[1], brief=brief, score=ret[2][index] if len(ret) > 2 else None)
             cnt += 1
             index += 1
         else:
