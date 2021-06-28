@@ -4,8 +4,8 @@ from miniSearchEngine.construct_engine.synonym import get_synonyms
 from miniSearchEngine.construct_engine.k_nearest_neighbors import k_nearest_for_query
 from miniSearchEngine.construct_engine.topk import Topk, NewTopK
 from miniSearchEngine.construct_engine.preprocess import preprocess_for_query
-# from miniSearchEngine.search_engine.interaction import start
-# from miniSearchEngine.search_engine.pretreatment import initialize, set_dict
+from miniSearchEngine.search_engine.interaction import start
+from miniSearchEngine.search_engine.pretreatment import initialize, set_dict
 from miniSearchEngine.search_engine.utils import write_other_dict2disk
 from miniSearchEngine.construct_engine.utils import display_query_result, display_query_result_detailed
 from miniSearchEngine.construct_engine.utils import get_doc_name_from_doc_id

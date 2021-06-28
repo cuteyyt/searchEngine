@@ -31,8 +31,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 10 files for debug.
-        # if i >= 10:
-        #     break
+        if i >= 100:
+            break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r', encoding='GBK') as file:
             content = file.read()
@@ -325,12 +325,10 @@ def construct_dict_with_vector_model(args, raw_doc_dict):  # 既创建向量空�
         name = "biword dict"
         term_dict_with_positional_index = construct_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model_v3(args, term_dict_with_positional_index, raw_doc_dict, name)
     if args.extended_biword:
         name = "extend biword dict"
         term_dict_with_positional_index = construct_extended_biword_dict_with_positional_index(args, raw_doc_dict)
         construct_term_dict(args, term_dict_with_positional_index, name)
-        construct_vector_model_v3(args, term_dict_with_positional_index, raw_doc_dict, name)
 
 
 def construct_engine(args):
@@ -404,6 +402,14 @@ def check_parameter_integrity(args):
         raise ValueError("Unsupported segmentation mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.seg))
 
+    if args.biword:
+        args.biword = 0
+        print("Warning: We don't use biword dict for its complexity and inconvenience.")
+
+    if args.extended_biword:
+        args.extended_biword = 0
+        print("Warning: We don't use extended biword dict for its complexity and inconvenience.")
+
     if args.tree <= 2 and args.tree != 0:
         raise ValueError("--tree/--B_plus_tree must be given a positive integer larger than 2 or 0, "
                          "use command \"construct_engine -h\" to see more details.".format(args.tree))
@@ -414,18 +420,25 @@ def check_parameter_integrity(args):
             "use command \"construct_engine -h\" to see more details.".format(args.tree))
     if 3 < args.tree <= 5:
         args.tree = 0
-        print("We don't use this for its complexity and inconvenience.")
+        print("Warning: We don't use b plus tree for its complexity and inconvenience.")
+
+    if args.permuterm:
+        args.permuterm = 0
+        print("Warning: We don't use permuterm index for its complexity and inconvenience.")
 
     if args.gram < 0:
         raise ValueError("--gram must be given a non-negative integer, "
                          "use command \"construct_engine -h\" to see more details.".format(args.gram))
     if args.gram > 0:
         args.gram = 0
-        print("We don't use this for its huge memory occupation.")
+        print("Warning: We don't use k-gram for its huge memory occupation.")
 
     if args.compress_doc_id not in ['none', 'vb', 'gamma']:
         raise ValueError("Unsupported compress/encode doc id mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.compress_doc_id))
+    else:
+        args.compress_doc_id = 'none'
+        print("Warning: We don't use compression for its bad performance.")
 
     args.engine_path = os.path.join(args.engine_path, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()))
     os.makedirs(args.engine_path, exist_ok=True)
@@ -495,7 +508,8 @@ def main():
     # Others
     parser.add_argument("--step_nums", type=int, default=100,
                         help="The doc number of one iteration when creating vector model."
-                             "Suggested is any integer between [100, 500].")
+                             "Suggested is any integer between [100, 500]."
+                             "No use any more.")
 
     args = parser.parse_args()
 
