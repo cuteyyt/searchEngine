@@ -2,7 +2,7 @@ from miniSearchEngine.construct_engine.construct import main
 from miniSearchEngine.construct_engine.utils import get_engine_from_csv
 from miniSearchEngine.construct_engine.synonym import get_synonyms
 from miniSearchEngine.construct_engine.k_nearest_neighbors import k_nearest_for_query
-from miniSearchEngine.construct_engine.topk import Topk, NewTopK
+from miniSearchEngine.construct_engine.topk import NewTopK
 from miniSearchEngine.construct_engine.preprocess import preprocess_for_query
 from miniSearchEngine.search_engine.interaction import start
 from miniSearchEngine.search_engine.pretreatment import initialize, set_dict
@@ -13,7 +13,7 @@ import pandas as pd
 
 if __name__ == '__main__':
     # engine_path = "engine/2021_06_27_15_13_01"
-    engine_path = main()
+    # engine_path = main()
     # get_engine_from_csv(engine_path, "term_dict_vector_model")
 
     """
@@ -39,4 +39,4 @@ if __name__ == '__main__':
     doc_id_list = [get_doc_name_from_doc_id("Reuters/", doc_id) for doc_id in doc_id_list]  # 按序号对应文件名
     print(doc_id_list)
     """
-    # start()
+    start()

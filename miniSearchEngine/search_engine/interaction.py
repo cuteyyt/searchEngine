@@ -24,7 +24,7 @@ HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
 data_path = "Reuters/"
-engine_path = "engine/2021_06_27_18_22_20"
+engine_path = "engine/2021_06_27_23_58_59"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
@@ -142,7 +142,7 @@ def display_result(query, ret, brief =False):
 
 def start():
     set_dict(engine_path)
-    term_dict=pd.read_csv(engine_path+"/term_dict.csv")
+    term_dict=pd.read_csv(engine_path+"/term_dict.csv",index_col=0)
     vector_model=pd.read_csv(engine_path+"/term_dict_vector_model.csv")
     word_correction = True
     brief = True
