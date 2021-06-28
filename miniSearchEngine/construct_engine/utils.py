@@ -9,6 +9,15 @@ import pandas as pd
 from .index_compression import restore_dict
 
 
+def find_pos_in_str(zi, mu):
+    len1 = len(zi)
+    pl = []
+    for each in range(len(mu) - len1):
+        if mu[each:each + len1] == zi:  # 找出与子字符串首字符相同的字符位置
+            pl.append(each)
+    return pl
+
+
 def insert_term2dict(term, _dict, doc_id, pos_id):
     if term != "":
         if term not in _dict.keys():
@@ -68,11 +77,8 @@ def get_engine_from_csv(file_path, name, mode="vb"):
             dict_map[term]['posting_list'] = eval(df['posting_list'][i])
     if "vector_model" in name:
         df = pd.read_csv(file_name)
-        for i, term in enumerate(df['term']):
-            term = str(term)
-            dict_map[term] = dict()
-            for j in range(1, len(df.columns)):
-                dict_map[term][j] = df[str(j)][i]
+        for i, doc_id in enumerate(df['doc_id']):
+            dict_map[doc_id] = eval(df['values'][i])
     if "spell" in name or "rotation" in name:
         df = pd.read_csv(file_name)
         for i, key in enumerate(df['key']):

@@ -97,16 +97,13 @@ def NewTopK(term_dict,vector_model,query,k=10):
         for x in doc_vector:# x[0]是词项索引，x[1]是tf-idf
             if x[0] in term_idx_set:
                 fenzi+=x[1]
-            doc_vector_norm+=x[1]*x[1]    
+            doc_vector_norm+=x[1]*x[1]
         doc_vector_norm=math.sqrt(doc_vector_norm)
         if fenzi!=0: sim_dict[i]=fenzi/(doc_vector_norm*query_vector_norm) # 如果文档和查询一个匹配都没有，不需要加入词典
         i+=1
     sim_dict=sorted(sim_dict.items(), key = lambda kv:(kv[1], kv[0]), reverse=True)
     topk_list=[]
-    for _ in sim_dict[0:k]:
-        # print(_)
-        if _[1]!=0:
-            topk_list.append(_)
-        else : break;
-    # print(sim_dict[0:k])
+    if len(sim_dict)>k:
+        topk_list=sim_dict[0:k]
+    else: topk_list=sim_dict
     return topk_list
