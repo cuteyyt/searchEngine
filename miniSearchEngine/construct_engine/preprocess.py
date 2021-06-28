@@ -4,7 +4,6 @@ import time
 
 import nltk
 from nltk.corpus import stopwords as nltk_stopwords
-import jieba
 
 from .utils import parsing_json
 
@@ -90,18 +89,13 @@ def preprocess_for_term(args, term):
 
 
 def preprocess_for_text(args, text):
-    if args.seg == 0 or args.seg == 1:
-        raw_term_list = text.split(" ")
+    raw_term_list = text.split(" ")
 
-        term_list = list()
-        for term in raw_term_list:
-            term = preprocess_for_term(args, term)
-            if term != "":
-                term_list.append(term)
-    elif args.seg == 2:
-        pass
-    else:
-        term_list = list(jieba.cut_for_search(text))
+    term_list = list()
+    for term in raw_term_list:
+        term = preprocess_for_term(args, term)
+        if term != "":
+            term_list.append(term)
 
     return term_list
 

@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from nltk import pos_tag
 
-from .utils import insert_term2dict, write_term_dict2disk
+from .utils import insert_term2dict, write_term_dict2disk, find_pos_in_str
 from .preprocess import preprocess_for_term, preprocess_for_text, preprocess_groups
 from .index_compression import index_compression
 from .postprocess import construct_b_plus_tree, construct_permuterm_index, construct_gram_index
@@ -31,7 +31,7 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 10 files for debug.
-        if i >= 100:
+        if i >= 10:
             break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r', encoding='GBK') as file:
@@ -57,20 +57,10 @@ def construct_term_dict_with_positional_index(args, raw_doc_dict):
     term_dict_with_positional_index = dict()
     for doc_id in tqdm(raw_doc_dict.keys()):
         content = raw_doc_dict[doc_id]['text']
-        if args.seg == 0 or args.seg == 1:
-            raw_term_list = content.split(" ")
-            for i, term in enumerate(raw_term_list):
-                term = preprocess_for_term(args, term)
-                insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
-        elif args.seg == 2:
-            pass
-        else:
-            # FIXME: position index
-            term_list = preprocess_for_text(args, content)
-            for i in range(len(term_list)):
-                raw_term = term_list[i]
-                term = preprocess_groups(args, raw_term)
-                insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
+        raw_term_list = content.split(" ")
+        for i, term in enumerate(raw_term_list):
+            term = preprocess_for_term(args, term)
+            insert_term2dict(term, term_dict_with_positional_index, doc_id, i)
     term_dict_with_positional_index = write_term_dict2disk(term_dict_with_positional_index,
                                                            os.path.join(args.engine_path,
                                                                         "term_dict_with_positional_index.csv"))
@@ -182,19 +172,14 @@ def construct_vector_model_v3(args, term_dict, doc_dict, filename):
         vector_model[doc_id] = list()
 
         content = doc_dict[doc_id]['text']
-        if args.seg == 0 or args.seg == 1:
-            raw_term_list = content.split(" ")
-            for i, term in enumerate(raw_term_list):
-                term = preprocess_for_term(args, term)
-                if term != "":
-                    tf = len(term_dict[term]['posting_list'][doc_id])
-                    tf_matrix[doc_id].append((term_idx[term], tf))
-                    vector_model[doc_id].append(
-                        (term_idx[term], (1. + math.log10(tf)) * math.log10(n / df_list[term])))
-        elif args.seg == 2:
-            pass
-        else:
-            pass
+        raw_term_list = content.split(" ")
+        for i, term in enumerate(raw_term_list):
+            term = preprocess_for_term(args, term)
+            if term != "":
+                tf = len(term_dict[term]['posting_list'][doc_id])
+                tf_matrix[doc_id].append((term_idx[term], tf))
+                vector_model[doc_id].append(
+                    (term_idx[term], (1. + math.log10(tf)) * math.log10(n / df_list[term])))
 
     vm_dict = {'doc_id': list(vector_model.keys()), 'values': list(vector_model.values())}
     vm = pd.DataFrame(vm_dict)
@@ -347,7 +332,7 @@ def construct_engine(args):
         term_dict = dict()
         for i in tqdm(range(len(filenames))):
             filename = filenames[i]
-            with open(os.path.join(data_path, filename), 'r') as file:
+            with open(os.path.join(data_path, filename), 'r', encoding="GBK") as file:
                 content = file.read()
                 raw_term_list = content.split(" ")
                 for term in raw_term_list:
@@ -361,7 +346,16 @@ def construct_engine(args):
                             if (i + 1) not in term_dict[term]['posting_list'].keys():
                                 term_dict[term]['posting_list'][i + 1] = None
             file.close()
-        write_term_dict2disk(term_dict, os.path.join(args.engine_path, "standard.csv"))
+        term_dict = dict(sorted(term_dict.items(), key=lambda x: x[0]))
+        term_col = list(term_dict.keys())
+        posting_list_col = list()
+        for term in tqdm(term_dict.keys()):
+            posting_list = dict(sorted(term_dict[term]['posting_list'].items(), key=lambda x: x[0]))
+            term_dict[term]['posting_list'] = posting_list
+            posting_list_col.append(posting_list)
+
+        data_frame = pd.DataFrame({'term': term_col, 'posting_list': posting_list_col})
+        data_frame.to_csv(os.path.join(args.engine_path, "standard.csv"), index=False, sep=',')
         end = time.time()
         print("I have done the task \"construct search engine\" with {} files in {:.4f} seconds.".format(
             len(filenames),
@@ -398,7 +392,7 @@ def construct_engine(args):
 
 def check_parameter_integrity(args):
     # Check each single arg
-    if args.seg not in [0, 1, 2, 3]:
+    if args.seg not in [0, 1]:
         raise ValueError("Unsupported segmentation mode {}, "
                          "use command \"construct_engine -h\" to see more details.".format(args.seg))
 
@@ -467,8 +461,6 @@ def main():
     parser.add_argument("--seg", "--segmentation", type=int, default=1,
                         help="0: Split by SPACES ONLY."
                              "1: Except [a-zA-Z0-9.-/], all other characters will be replaced by BLANK."
-                             "2: Split by default NLTK API."
-                             "3: Split by default JIEBA API."
                              "default is 1.")
     parser.add_argument("--stop", "--stopwords", type=bool, default=False,
                         help="Whether to remove stop words, default is FALSE.")
