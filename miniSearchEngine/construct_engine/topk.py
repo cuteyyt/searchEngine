@@ -103,10 +103,7 @@ def NewTopK(term_dict,vector_model,query,k=10):
         i+=1
     sim_dict=sorted(sim_dict.items(), key = lambda kv:(kv[1], kv[0]), reverse=True)
     topk_list=[]
-    for _ in sim_dict[0:k]:
-        # print(_)
-        if _[1]!=0:
-            topk_list.append(_[0])
-        else : break;
-    # print(sim_dict[0:k])
+    if len(sim_dict)>k:
+        topk_list=sim_dict[0:k]
+    else: topk_list=sim_dict
     return topk_list
