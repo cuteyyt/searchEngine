@@ -2,7 +2,7 @@ from miniSearchEngine.construct_engine.construct import main
 from miniSearchEngine.construct_engine.utils import get_engine_from_csv
 from miniSearchEngine.construct_engine.synonym import get_synonyms
 from miniSearchEngine.construct_engine.k_nearest_neighbors import k_nearest_for_query
-from miniSearchEngine.construct_engine.topk import TopK
+from miniSearchEngine.construct_engine.topk import Topk, NewTopK
 from miniSearchEngine.construct_engine.preprocess import preprocess_for_query
 # from miniSearchEngine.search_engine.interaction import start
 # from miniSearchEngine.search_engine.pretreatment import initialize, set_dict

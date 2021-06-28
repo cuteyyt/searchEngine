@@ -10,7 +10,6 @@ from .utils import parsing_json
 
 
 def segmentation(mode):
-    # FIXME: Complete mode 0, 2, 3
     r = None
     if mode == 0:
         r = r"[\n]+"
@@ -53,21 +52,10 @@ def dot_check(term):
     return term
 
 
-def preprocess_for_term(args, term):
-    r = segmentation(args.seg)
+def preprocess_groups(args, term):
     stopwords = read_stopwords()
     wnl = nltk.WordNetLemmatizer()
     porter = nltk.PorterStemmer()
-
-    if r is None:
-        pass
-    else:
-        term = re.sub(r, r"", term)
-        an = re.search('^[.]+$', term)
-        if an:
-            term = ""
-        if term != "":
-            term = dot_check(term)
 
     if args.stop:
         if is_stopword(term, stopwords):
@@ -79,17 +67,41 @@ def preprocess_for_term(args, term):
         term = lemmatization(wnl, term)
     if args.stem:
         term = stemming(porter, term)
+
+    return term
+
+
+def preprocess_for_term(args, term):
+    r = segmentation(args.seg)
+
+    if r is None:
+        pass
+    else:
+        term = re.sub(r, r"", term)
+        an = re.search('^[.]+$', term)
+        if an:
+            term = ""
+        if term != "":
+            term = dot_check(term)
+
+    term = preprocess_groups(args, term)
+
     return term
 
 
 def preprocess_for_text(args, text):
-    raw_term_list = text.split(" ")
+    if args.seg == 0 or args.seg == 1:
+        raw_term_list = text.split(" ")
 
-    term_list = list()
-    for term in raw_term_list:
-        term = preprocess_for_term(args, term)
-        if term != "":
-            term_list.append(term)
+        term_list = list()
+        for term in raw_term_list:
+            term = preprocess_for_term(args, term)
+            if term != "":
+                term_list.append(term)
+    elif args.seg == 2:
+        pass
+    else:
+        term_list = list(jieba.cut_for_search(text))
 
     return term_list
 
