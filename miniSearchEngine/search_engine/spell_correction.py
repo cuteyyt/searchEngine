@@ -40,12 +40,13 @@ def correct_bad_words(bad_word):
     best_word = candidate_words[0]
     for word_tuple in candidate_words:
         word_freq = get_frequency(word_tuple[0])
-        if word_freq > max_freq:
+        if word_tuple[1] < best_word[1]:
             best_word = word_tuple
             max_freq = word_freq
-        elif word_freq == max_freq:
-            if word_tuple[1] < best_word[1]:
-                best_word = word_tuple
+        elif word_freq > max_freq:
+            best_word = word_tuple
+            max_freq = word_freq
+
     return best_word[0]
 
 

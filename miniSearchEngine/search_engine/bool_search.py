@@ -151,7 +151,7 @@ def bool_search(query_list, word_correction=True, wildcards_search=True):
             else:
                 break
 
-    if len(sta) > 1 or not isinstance(sta[0], list):
+    if not isinstance(sta[0], list) or len(sta) > 1:
         error_info("ERROR! Syntax failed!")
         return
 
