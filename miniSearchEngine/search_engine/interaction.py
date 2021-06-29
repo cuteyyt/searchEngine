@@ -1,6 +1,8 @@
 import time
 import pandas as pd
 import os
+import json
+from pathlib import Path
 
 from .bool_search import bool_search
 from .output_format import success_info, error_info, warning_info, plain_info, highlight_info
@@ -25,7 +27,7 @@ HELP = ["! help", "! h"]
 WILDCARDS_STAR = "*"
 
 data_path = "Reuters/"
-engine_path = "engine/2021_06_27_23_58_59"
+engine_path = ""
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
@@ -151,6 +153,14 @@ def display_result(query, ret, brief=False):
 
 
 def start():
+    global engine_path
+    with open("config.json", 'r') as load_f:
+        config = json.load(load_f)
+        if "engine_path" in config:
+            engine_path = config["engine_path"]
+    if engine_path == "" or not Path(engine_path).is_dir():
+        error_info("Error when get engine_path. Please use 'construct_engine' to build indexes or check 'config.json'")
+        return
     set_dict(engine_path)
     term_dict = pd.read_csv(engine_path + "/term_dict.csv", index_col=0)
     vector_model = pd.read_csv(engine_path + "/term_dict_vector_model.csv")

@@ -442,7 +442,7 @@ def check_parameter_integrity(args):
         file.write(json_data)
     file.close()
 
-    with open('config.json', 'a') as file:
+    with open('config.json', 'w') as file:
         json_data = json.dumps({'engine_path': args.engine_path}, indent=2)
         file.write(json_data)
     file.close()
