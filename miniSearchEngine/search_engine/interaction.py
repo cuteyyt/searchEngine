@@ -29,7 +29,8 @@ engine_path = "engine/2021_06_27_23_58_59"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
-    return bool_search(query, engine_path=engine_path, word_correction=word_correction, wildcards_search=wildcards_search)
+    return bool_search(query, engine_path=engine_path, word_correction=word_correction,
+                       wildcards_search=wildcards_search)
 
 
 def parse_query(query, word_correction=True, wildcards_search=True):
@@ -60,9 +61,9 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, vector_model, term_dict, synonym = False,word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model, term_dict, synonym=False, word_correction=True, wildcards_search=True):
     if synonym:
-        query=get_synonyms(query)
+        query = get_synonyms(query)
         print(query)
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
@@ -199,11 +200,11 @@ def start():
         if model_select == 1:
             ret = bool_search_interface(query, word_correction)
         elif model_select == 2:
-            ret = topk_search_interface(query, vector_model, term_dict,word_correction=word_correction)
+            ret = topk_search_interface(query, vector_model, term_dict, word_correction=word_correction)
         elif model_select == 3:
             ret = k_nearest_search_interface(query, word_correction)
         elif model_select == 4:
-            ret = topk_search_interface(query, vector_model, term_dict, synonym=True,word_correction=word_correction)
+            ret = topk_search_interface(query, vector_model, term_dict, synonym=True, word_correction=word_correction)
         else:
             ret = bool_search_interface(query, word_correction)
         query_end = time.time()

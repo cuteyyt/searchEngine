@@ -132,3 +132,4 @@ dmypy.json
 /.idea/
 /Reuters/
 /engine/
+/config.json/

@@ -31,8 +31,8 @@ def read_files(data_path="Reuters"):
     filenames = sorted(filenames, key=lambda x: int(x.split(".")[0]))
     for i in tqdm(range(len(filenames))):
         # FIXME: Choose first 10 files for debug.
-        if i >= 10:
-            break
+        # if i >= 10:
+        #     break
         filename = filenames[i]
         with open(os.path.join(data_path, filename), 'r', encoding='GBK') as file:
             content = file.read()
@@ -439,6 +439,11 @@ def check_parameter_integrity(args):
     # Save parameters
     with open(os.path.join(args.engine_path, 'args.json'), 'w') as file:
         json_data = json.dumps(args.__dict__, indent=2)
+        file.write(json_data)
+    file.close()
+
+    with open('config.json', 'a') as file:
+        json_data = json.dumps({'engine_path': args.engine_path}, indent=2)
         file.write(json_data)
     file.close()
     return args
