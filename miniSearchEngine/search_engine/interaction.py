@@ -29,7 +29,7 @@ engine_path = "engine/2021_06_27_23_58_59"
 
 
 def bool_search_interface(query, word_correction, wildcards_search=True):
-    return bool_search(query, word_correction, wildcards_search)
+    return bool_search(query, engine_path=engine_path, word_correction=word_correction, wildcards_search=wildcards_search)
 
 
 def parse_query(query, word_correction=True, wildcards_search=True):

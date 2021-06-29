@@ -3,7 +3,6 @@ from .wildcards_search import get_wildcards_word
 from .output_format import warning_info, error_info, plain_info, highlight_info
 from .pretreatment import get_term_dict
 from ..construct_engine.preprocess import preprocess_for_query
-engine_path = "engine/2021_06_27_23_58_59"
 
 BRACKETS_LEFT = "("
 BRACKETS_RIGHT = ")"
@@ -67,7 +66,7 @@ def bool_opt_not(docs1, max_doc_num=100):
     return ret
 
 
-def bool_search(query_list, word_correction=True, wildcards_search=True):
+def bool_search(query_list, engine_path, word_correction=True, wildcards_search=True):
     if len(query_list) == 0:
         error_info("Input can't be empty.")
         return
