@@ -23,15 +23,16 @@ cd searchEngine
 pip install -e .
 ```
 
-### 创建搜索引擎
+### 创建搜索引擎、构建倒排列表等必要文件
+使用默认参数构建搜索引擎:
 ```shell
 construct_engine
 ```
-使用默认参数，将会...
+
+查看参数说明:
 ```shell
 construct_engine -h
 ```
-查看参数说明。
 
 ### 启动搜索引擎
 
@@ -151,7 +152,7 @@ education
 
 切换到模式3，使用k nearest搜索模式进行搜索（同时支持拼写矫正和通配查询）。
 
-至少要输入两个词语。
+默认k值为5,即所输入的所有词语的相互间隔不超过5。至少要输入两个词语。
 
 示例：
 
@@ -383,7 +384,7 @@ gurantee
 
 首先提示查询词项不存在，并显示改正后的词项：guarantee。然后显示查询结果。
 
-![image-20210629202612976](D:\pyProject\searchEngine\images\gurantee.png)
+![image-20210629202612976](.\images\gurantee.png)
 
 ```
 kindom
@@ -400,9 +401,9 @@ kindom
 education
 ```
 
-先显示最多五个同义词，再返回搜索结果。
+先显示输入查询中每个词的最多五个同义词，再返回搜索结果。
 
-![image-20210629203212410](D:\pyProject\searchEngine\images\synmoym.png)
+![image-20210629203212410](.\images\synmoym.png)
 
 ## 其他
 

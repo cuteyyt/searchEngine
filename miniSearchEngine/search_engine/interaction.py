@@ -63,7 +63,7 @@ def parse_query(query, word_correction=True, wildcards_search=True):
     return words
 
 
-def topk_search_interface(query, vector_model, term_dict, synonym=False, word_correction=True, wildcards_search=True):
+def topk_search_interface(query, vector_model, term_dict, synonym=False, word_correction=True, wildcards_search=True,k=10):
     if synonym:
         query = get_synonyms(query)
         print(query)
@@ -71,7 +71,7 @@ def topk_search_interface(query, vector_model, term_dict, synonym=False, word_co
     if len(words) == 0:
         return None
     query = ' '.join(words)
-    res = NewTopK(term_dict, vector_model, query)
+    res = NewTopK(term_dict, vector_model, query,k)
     ret = []
     scores = []
     for x in res:
@@ -80,13 +80,13 @@ def topk_search_interface(query, vector_model, term_dict, synonym=False, word_co
     return ret, words, scores
 
 
-def k_nearest_search_interface(query, word_correction, wildcards_search=True):
+def k_nearest_search_interface(query, word_correction, wildcards_search=True,k=5):
     words = parse_query(query, word_correction, wildcards_search)
     if len(words) == 0:
         return None
     query = ' '.join(words)
     df = pd.read_csv(open(engine_path + "/term_dict_with_positional_index.csv"))
-    return k_nearest_for_query(df, query), words
+    return k_nearest_for_query(df, query,k), words
 
 
 def display_document_details(doc, words, sentence_num=5, sentence_len=10, brief=False, score=None):
@@ -185,19 +185,19 @@ def start():
             brief = False
             success_info("Detail mode.")
             continue
-        if query in SWITCH_MODE_1:
+        if query in SWITCH_MODE_1:# 布尔查询
             model_select = 1
             success_info("You are using bool search.")
             continue
-        if query in SWITCH_MODE_2:
+        if query in SWITCH_MODE_2:# 非同义词topk
             model_select = 2
             success_info("You are using top k search.")
             continue
-        if query in SWITCH_MODE_3:
+        if query in SWITCH_MODE_3:# k邻近
             model_select = 3
             success_info("You are using k nearest search.")
             continue
-        if query in SWITCH_MODE_4:
+        if query in SWITCH_MODE_4:# 同义词topk
             model_select = 4
             success_info("You are synonym topk search.")
             continue
@@ -207,13 +207,13 @@ def start():
         if query in EXIT_COMMAND:
             break
         query_start = time.time()
-        if model_select == 1:
+        if model_select == 1:# 布尔查询
             ret = bool_search_interface(query, word_correction)
-        elif model_select == 2:
+        elif model_select == 2:# 非同义词topk
             ret = topk_search_interface(query, vector_model, term_dict, word_correction=word_correction)
-        elif model_select == 3:
+        elif model_select == 3:# k邻近
             ret = k_nearest_search_interface(query, word_correction)
-        elif model_select == 4:
+        elif model_select == 4:# 同义词topk
             ret = topk_search_interface(query, vector_model, term_dict, synonym=True, word_correction=word_correction)
         else:
             ret = bool_search_interface(query, word_correction)
