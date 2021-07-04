@@ -314,8 +314,8 @@ def write_tree2disk(engine_path, keys, values, order=4):
     file_content = list()
 
     for key, value in zip(keys, values):
-        file_content.append(key + " " + value + "\n")
-        tree.insert(key, verbose=False)
+        file_content.append(str(key) + " " + str(value) + "\n")
+        tree.insert(str(key), verbose=False)
 
     with open(os.path.join(tree_folder, "node_index.txt"), "w")as file:
         file.writelines(file_content)

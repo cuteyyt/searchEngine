@@ -2,18 +2,73 @@
 
 浙江大学 2021 年春夏学期 **信息检索与WEB搜索** 课程大作业
 
-[toc]
+GitHub [链接](https://github.com/cuteyyt/searchEngine.git)
+
+**分工**
+
+- 尹幽潭：倒排索引、向量空间模型、索引压缩、使用词典索引
+- 付冰洋：布尔查询、通配查询、拼写矫正
+- 黄家伟：基于快速评分的Top K查询、短语查询、同义词扩展
+- 展示和报告：三人协作，各自完成自己代码对应部分
+
+[TOC]
+
+## 改进
+
+1. 我们借鉴了第二组使用 gzip 对词典等文件进行压缩的做法，文件存储空间确实变小了，下图是未压缩前的文件大小：
+
+   ![before_compress](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\before_compress.PNG)
+
+   下图为压缩后的文件大小：
+
+   ![after_compress](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\after_compress.PNG)
+
+   可以发现，文件大小可以压缩到原来的四分之一乃至更多。需要注意的是，由于python语言自身的局限（操作 byte 类型的困难性），我们虽然对文档 id 的间隔进行了 vb 编码或 gamma 编码，但可能加载到内存中的词典或是倒排索引大小并没有实际缩小。
+
+2. 优化了拼写矫正的效果，如下图所示：gurantee 被成功矫正为 guarantee 进行查询。
+
+   ![](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\gurantee.png)
+
+
 
 ## 使用
 
 ### 文件组织
 
-等待完善
+我们提交的压缩包的文件组织如下图所示：
+
+```shell
+group1
+├── report.pdf # 这是我们的报告
+├── 第一组展示.ppt # 这是我们的展示PPT
+├── nltk_data # python nltk 库的依赖文件
+└── searchEngine # GitHub 对应 repo，包含代码、报告md源文件、词典文件等
+	├── engine # 默认生成的词典文件存放路径，不包含在 git 中
+		└── example # 这个文件夹下包含我们所有索引构建方法生成的文件
+		├── presentation # 这个文件夹下仅包含一个只含有词项词典和倒排索引的文件
+		├── 2021_06_27_23_58_59 # 这个文件夹下是我们默认使用的搜索引擎，可以取得最好效果
+		├── 2021_06_28_00_43_27 # 这个文件夹下是更细粒度分词的搜索引擎，但实际效果不好
+	├── images # 报告 md 文件用图，包含在 git 中
+	├── miniSearchEngine # 代码文件夹，包含在 git 中
+	├── miniSearchEngine.egg-info # pip 安装生成的文件夹，不包含在 git 中
+	├── Reuters # 数据集，不包含在 git 中
+	├── .gitignore
+	├── LICENSE
+	├── config.json # 记录词典等文件的存储路径，用户可自己修改，包含在 git 中
+	├── README.md # 报告 pdf 源文件
+	├── setup.cfg
+	└── setup.py # 这两个文件执行 python 打包，包含在 git 中
+```
 
 ### 环境配置
 
-需要 python 3.0 及以上版本。  
-推荐 conda 环境。
+- 需要 windows 10 操作系统
+
+- 需要 python 3.0 及以上版本（推荐 conda 虚拟环境）
+
+`Note：` 我们的 project 可以直接通过命令行使用。使用 -e 方式安装，表示在安装的同时复制源码，所以也支持对我们的 project 进行修改，将其作为 python 库在其他的代码中调用，project 的代码相关文件夹都已经封装成了 python package，可以直接使用 import 导入其中的方法。
+
+`Note：` 如果是解压我们提交的压缩包以后，只需要做**配置 nltk 必要包**这一步操作，然后在命令行输入**start_engine**进行测试即可，其他安装和构建引擎的操作我们已经完成了。如果是从 GitHub 拉取的 project，则需要执行下面所有的配置步骤。
 
 ### 安装 miniSearchEngine
 
@@ -23,18 +78,67 @@ cd searchEngine
 pip install -e .
 ```
 
+### 配置 nltk 必要包
+
+请将`nltk_data`这个文件夹放到路径`C:/users/xxx/`下，并保持名字不变。其中，xxx 是当前 windows 系统的用户名。
+
 ### 创建搜索引擎、构建倒排列表等必要文件
-使用默认参数构建搜索引擎:
+
+单独构建一个只含有词项词典+倒排记录表的文件，用于展示我们索引构建的速度。这部分生成的内容已保存在路径`searchEngine/engine/example`下。
+
+```shell
+construct_engine --presentation True
+```
+
+使用默认参数构建搜索引擎：将产生一个和我们默认搜索引擎相同参数的引擎文件夹。
+
 ```shell
 construct_engine
 ```
 
-查看参数说明:
+在该文件夹下，包含如下文件，使用它们就足以支撑我们的搜索，`args.json`记录了构建搜索引擎所使用的所有参数：
+
+![engine](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\engine.PNG)
+
+构建词典+含位置索引的倒排索引的过程需要3~5分钟。
+
+![term_dict_speed](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\term_dict_speed.PNG)
+
+同样，向量空间模型的规模与词典相近，也需要3~5分钟。
+
+![vector_model_speed](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\vector_model_speed.PNG)
+
+查看构建引擎过程中参数的详细说明和帮助：
+
 ```shell
 construct_engine -h
 ```
 
+`Note：` 我们以构建的时间标志不同的引擎文件，每次构建都将在用户指定的文件路径下生成一个以系统当前时间命名的引擎文件夹，内含词典、倒排索引、向量空间模型等等。
+
+`Note：`在实际探索以后，虽然保留了诸如产生 b+ 树这样的参数，但考虑到构建的速度和使用的方便性，即使指定了这些参数，我们也不会生成相应的文件。我们会在构建过程的命令行输出中给出提示，同时，可以参考 `searchEngine/engine/example`文件夹下的文件来查看我们在引擎构建方面所做出的所有探索和努力。对于双词索引、双词拓展、轮排索引、k-gram索引、b+ 树、vb 编码、 gamma 编码、gzip 压缩，我们都有实现。
+
 ### 启动搜索引擎
+
+如果不构建搜索引擎，将使用我们默认的引擎文件`searchEngine/engine/2021_06_27_23_58_59`
+
+该引擎基于如下策略建立：
+
+1. 预处理
+   - 分词：按空格分词后，仅保留大小写字母和数字，以及'.'（浮点数），'/'和'-'（日期或专有词）。
+   - 停用词：不去除。
+   - normalization：大写字母统一转为小写。
+   - lemmatization：不做。
+   - stemming：不做。
+2. 引擎内容：除以下三种，其他均不做。
+   - 词项词典+含位置索引的倒排记录表
+   - 对应向量空间模型
+
+实际测试中，该引擎可取得最优效果。
+
+另一个文件夹`searchEngine/engine/2021_06_28_00_43_27`代表仅根据空格分词的策略下建成的索引，虽然理论上粒度高的引擎能取得更好的搜索效果，但实际测试发现不然。
+
+使用如下命令即可启动引擎进行搜索测试：
 
 ```shell
 start_engine
@@ -94,8 +198,6 @@ start_engine
 ! exit
 ! e
 ```
-
-
 
 ### 查询/搜索方法
 
@@ -206,24 +308,19 @@ term_dict = {
 
 ```python
 vector_model = {
-    'a': {
-        1: 1.1,  # doc_id: tf-idf
-        2: 2.2,
+    1: {
+       	'a': 1.1,  # term: tf-idf
+        'b': 2.2,
         # ...
     },
-    'b': {
-        1: 1.1,  # doc_id: tf-idf
-        2: 2.2,
+    2: {
+       	'a': 1.1,  # term: tf-idf
+        'b': 2.2,
         # ...
     },
     # ...
 }
 ```
-
-#### 快速词项定位
-1. 基于哈希表的词典索引
-python 字典本身就是基于哈希表实现
-2. 基于搜索树的词典索引
 
 ### 布尔搜索
 
@@ -274,11 +371,9 @@ python 字典本身就是基于哈希表实现
 
 * 贪心判断得到的每一个待选词项是否符合要求。
 
+  
+
 ## 测试
-
-### 索引构建
-
-TODO
 
 ### 启动搜索引擎
 
@@ -405,7 +500,13 @@ education
 
 ![image-20210629203212410](.\images\synmoym.png)
 
+## 退出
+
+任意敲击一个字符，再 Ctrl+C 即可。
+
+
+
 ## 其他
 
-
+有任何疑问，可以直接联系尹幽潭 [youtanyin@zju.edu.cn]。
 

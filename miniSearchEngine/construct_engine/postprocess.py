@@ -23,7 +23,8 @@ def construct_permuterm_index(engine_path):
             df = pd.read_csv(os.path.join(engine_path, engine_name))
             new_column = dict()
             for i, term in enumerate(df['term']):
-                new_column[i] = get_permuterm_index(term)
+                term = str(term)
+                new_column[i] = str(get_permuterm_index(term))
             df['permuterm_index'] = list(new_column.values())
             df.to_csv(os.path.join(
                 engine_path, engine_name.replace(".csv", "_with_permuterm_index.csv")),
@@ -52,6 +53,7 @@ def construct_gram_index(engine_path, k=2):
             gram_term_dict = dict()
             new_df = pd.DataFrame(columns=['term', 'posting_list'])
             for i, term in enumerate(df['term']):
+                term = str(term)
                 k_gram_list = get_k_gram(term, k)
                 for new_term in k_gram_list:
                     if new_term not in gram_term_dict.keys():
@@ -78,3 +80,17 @@ def construct_b_plus_tree(engine_path, order=4):
             write_tree2disk(engine_path, keys, values, order)
     end = time.time()
     print("I have done the task in {:.4f} seconds.".format(end - start))
+
+
+def compress_files_by_gzip(path):
+    import gzip
+    print("I'm doing the task: compress files in {} using gzip".format(path))
+    start = time.time()
+    os.makedirs(os.path.join(path, "gzip"), exist_ok=True)
+    for filename in os.listdir(path):
+        if filename != 'gzip' and 'tree' not in filename:
+            file = gzip.GzipFile(filename=os.path.join(path, "gzip", filename), mode="wb", compresslevel=9)
+            file.write(open(os.path.join(path, filename), "rb").read())
+            file.close()
+    end = time.time()
+    print("I have done the task in {:.4f} seconds".format(end - start))

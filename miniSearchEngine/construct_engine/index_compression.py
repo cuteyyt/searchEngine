@@ -12,7 +12,8 @@ def index_compression(engine_path, mode):
     cnt = 0
     for engine_name in os.listdir(engine_path):
         file_path = os.path.join(engine_path, engine_name)
-        if "dict" in engine_name and "spell" not in engine_name and "vector_model" not in engine_name:
+        if "dict" in engine_name and "spell" not in engine_name and "vector_model" not in engine_name and \
+                'compressed' not in engine_name:
             compress_dict(file_path, mode)
             cnt += 1
     end = time.time()

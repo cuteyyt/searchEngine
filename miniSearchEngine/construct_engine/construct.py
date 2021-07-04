@@ -10,10 +10,10 @@ from copy import deepcopy
 
 from nltk import pos_tag
 
-from .utils import insert_term2dict, write_term_dict2disk, find_pos_in_str
-from .preprocess import preprocess_for_term, preprocess_for_text, preprocess_groups
+from .utils import insert_term2dict, write_term_dict2disk
+from .preprocess import preprocess_for_term
 from .index_compression import index_compression
-from .postprocess import construct_b_plus_tree, construct_permuterm_index, construct_gram_index
+from .postprocess import construct_b_plus_tree, construct_permuterm_index, construct_gram_index, compress_files_by_gzip
 
 
 def read_files(data_path="Reuters"):
@@ -191,7 +191,7 @@ def construct_vector_model_v3(args, term_dict, doc_dict, filename):
     col = len(doc_dict.keys())
 
     end = time.time()
-    print("\tVector model v2 {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
+    print("\tVector model v3 {:d}*{:d}(term*docs) has been created in {:.4f} seconds!".format(row, col, end - start))
 
 
 def construct_vector_model_v2(args, term_dict, doc_dict, filename, step_nums=1000):
@@ -388,6 +388,8 @@ def construct_engine(args):
             construct_permuterm_index(args.engine_path)
         if args.gram:
             construct_gram_index(args.engine_path, args.gram)
+        if args.gzip:
+            compress_files_by_gzip(args.engine_path)
 
 
 def check_parameter_integrity(args):
@@ -503,10 +505,9 @@ def main():
                              "gamma: use gamma encoding.")
 
     # Others
-    parser.add_argument("--step_nums", type=int, default=100,
-                        help="The doc number of one iteration when creating vector model."
-                             "Suggested is any integer between [100, 500]."
-                             "No use any more.")
+    parser.add_argument("--gzip", type=bool, default=False,
+                        help="Whether to compress file into gzip format."
+                             "It doesn't actually make sense.")
 
     args = parser.parse_args()
 
