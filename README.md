@@ -17,17 +17,17 @@ GitHub [链接](https://github.com/cuteyyt/searchEngine.git)
 
 1. 我们借鉴了第二组使用 gzip 对词典等文件进行压缩的做法，文件存储空间确实变小了，下图是未压缩前的文件大小：
 
-   ![before_compress](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\before_compress.PNG)
+   ![before_compress](.\images\before_compress.PNG)
 
    下图为压缩后的文件大小：
 
-   ![after_compress](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\after_compress.PNG)
+   ![after_compress](.\images\after_compress.PNG)
 
    可以发现，文件大小可以压缩到原来的四分之一乃至更多。需要注意的是，由于python语言自身的局限（操作 byte 类型的困难性），我们虽然对文档 id 的间隔进行了 vb 编码或 gamma 编码，但可能加载到内存中的词典或是倒排索引大小并没有实际缩小。
 
 2. 优化了拼写矫正的效果，如下图所示：gurantee 被成功矫正为 guarantee 进行查询。
 
-   ![](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\gurantee.png)
+   ![](.\images\gurantee.png)
 
 
 
@@ -98,15 +98,15 @@ construct_engine
 
 在该文件夹下，包含如下文件，使用它们就足以支撑我们的搜索，`args.json`记录了构建搜索引擎所使用的所有参数：
 
-![engine](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\engine.PNG)
+![engine](.\images\engine.PNG)
 
 构建词典+含位置索引的倒排索引的过程需要3~5分钟。
 
-![term_dict_speed](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\term_dict_speed.PNG)
+![term_dict_speed](.\images\term_dict_speed.PNG)
 
 同样，向量空间模型的规模与词典相近，也需要3~5分钟。
 
-![vector_model_speed](D:\ZJU\Third_two\Information retrieval and Web search\project\searchEngine\images\vector_model_speed.PNG)
+![vector_model_speed](.\images\vector_model_speed.PNG)
 
 查看构建引擎过程中参数的详细说明和帮助：
 
@@ -500,9 +500,15 @@ education
 
 ![image-20210629203212410](.\images\synmoym.png)
 
-## 退出
+### 退出
 
-任意敲击一个字符，再 Ctrl+C 即可。
+使用exit命令退出。
+
+```shell
+! exit
+```
+
+![exit](./images/exit.png)
 
 
 
